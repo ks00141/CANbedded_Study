@@ -1,0 +1,12 @@
+# Original/source material excluded from the study documentation repository.
+/src/
+/CANDB/
+/FD_CANDB/
+/geny/
+/reference_docs/
+
+# Local/editor noise.
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
