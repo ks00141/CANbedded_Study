@@ -1,0 +1,1439 @@
+# Can 계층 파일별 상세 분석 보고서
+
+- 분석 대상: `Can` 계층
+- 파일 수: 3
+- 생성 시각: 2026-05-28 22:37:38
+- 분석 방식: C 전처리 매크로, typedef, 전역 데이터 선언, 함수 선언/정의를 자동 추출하고 함수명/주석/계층 역할을 기준으로 한글 역할 설명을 부여함.
+
+## 계층 요약
+
+CAN 계층은 FlexCAN 하드웨어와 상위 IL/TP/NM 계층 사이의 송수신, 하드웨어 오브젝트, 인터럽트, 버스 상태 제어를 담당한다.
+
+## 파일 목록
+
+- `src/CBD/Can/can_def.h` (165,120 bytes)
+- `src/CBD/Can/can_drv.c` (344,197 bytes)
+- `src/CBD/Can/can_inc.h` (3,256 bytes)
+
+## 파일이름 : can_def
+
+- 경로: `src/CBD/Can/can_def.h`
+- 파일 종류: `.h`
+- 파일 크기: 165,120 bytes
+- 파일 내용: CAN 드라이버 타입, 레지스터 구조, 핸들, 콜백 타입과 드라이버 매크로를 정의한다.
+
+### 1. .c/.h 파일 이름
+
+- `can_def.h`
+
+### 2. 파일 내 변수, 매크로 등 전역 심볼
+
+- 매크로 수: 456
+- typedef/struct/enum 후보 수: 29
+- 전역 변수/테이블 선언 후보 수: 743
+
+#### 주요 매크로
+- L6 `CAN_HL_H`
+- L412 `DRVCAN_MAC7100FLEXCANHLL_VERSION` = `0x0235u`
+- L413 `DRVCAN_MAC7100FLEXCANHLL_RELEASE_VERSION` = `0x01u`
+- L417 `DRVCAN__COREHLL_VERSION` = `0x0213`
+- L418 `DRVCAN__COREHLL_RELEASE_VERSION` = `0x00`
+- L420 `DRVCAN__HLLTXQUEUEBIT_VERSION` = `0x0106`
+- L421 `DRVCAN__HLLTXQUEUEBIT_RELEASE_VERSION` = `0x03`
+- L438 `C_MULTIPLE_RECEIVE_CHANNEL`
+- L439 `MULTIPLE_RECEIVE_CHANNEL`
+- L441 `C_SINGLE_RECEIVE_CHANNEL`
+- L446 `C_ENABLE_CAN_TRANSMIT`
+- L451 `C_ENABLE_OFFLINE`
+- L455 `C_ENABLE_STOP`
+- L459 `C_ENABLE_CAN_CAN_INTERRUPT_CONTROL`
+- L464 `C_ENABLE_CAN_CANCEL_TRANSMIT`
+- L470 `kCanNumberOfHwChannels` = `kCanNumberOfChannels`
+- L474 `C_ENABLE_INDIVIDUAL_BUFFER_MASKING`
+- L476 `C_ENABLE_FLEXCAN_INDIV_RXMASK`
+- L479 `C_ENABLE_FLEXCAN_RXFIFO` = `/* FlexCAN Rx FIFO is required if individual receive masks are not available */`
+- L484 `C_HL_DISABLE_OVERRUN_IN_STATUS`
+- L485 `C_HL_DISABLE_HW_RANGES_FILTER`
+- L486 `C_HL_DISABLE_DUMMY_FCT_CALL`
+- L487 `C_HL_DISABLE_TX_MSG_DESTROYED`
+- L488 `C_HL_DISABLE_HW_EXIT_TRANSMIT`
+- L489 `C_HL_DISABLE_LAST_INIT_OBJ`
+- L490 `C_HL_DISABLE_REJECT_UNWANTED_IDTYPE`
+- L491 `C_HL_DISABLE_REJECT_REMOTE_FRAME`
+- L492 `C_HL_DISABLE_REJECT_REMOTE_FRAME_FULLCAN`
+- L493 `C_HL_DISABLE_COPROCESSOR_SUPPORT`
+- L495 `C_HL_ENABLE_IDTYPE_IN_DLC`
+- L499 `C_HL_ENABLE_CANCEL_IN_HW_TASK`
+- L501 `C_HL_DISABLE_CANCEL_IN_HW_TASK`
+- L506 `C_DISABLE_DRIVER_STATUS`
+- L515 `C_ENABLE_WORKAROUND_ERRATA_E4019PS`
+- L523 `kCanNumberOfRxBasicMasks` = `kCanNumberOfMaxBasicCAN`
+- L527 `kCanNumberOfRxBasicMasks` = `2`
+- L529 `kCanNumberOfRxBasicMasks` = `1`
+- L537 `kCanNumberOfRxBasicMasks` = `3`
+- L544 `C_HL_ENABLE_ADJUST_RXHANDLE`
+- L551 `C_DISABLE_CAN_WAKEUP_INTERRUPT`
+- L553 `C_ENABLE_CAN_WAKEUP_INTERRUPT`
+- L563 `C_DISABLE_CAN_BUSOFF_INTERRUPT`
+- L565 `C_ENABLE_CAN_BUSOFF_INTERRUPT`
+- L571 `C_ENABLE_CAN_RXTX_INTERRUPT`
+- L573 `C_DISABLE_CAN_RXTX_INTERRUPT`
+- L578 `C_ENABLE_ISR_PROTOTYPE`
+- L583 `C_ENABLE_BITMASK_BY_SHIFT`
+- L587 `C_ENABLE_CAN_INTLOCK_BY_MACRO`
+- L592 `C_DISABLE_CAN_ISR_LOCK`
+- L598 `C_ENABLE_CAN_ISR_LOCK`
+- L602 `C_DISABLE_FLEXCAN_AUTO_RECOVERY`
+- L607 `CanFlexCanInterruptDisable(x)` = `CanCanInterruptDisable(x)`
+- L608 `CanFlexCanInterruptRestore(x)` = `CanCanInterruptRestore(x)`
+- L611 `CanFlexCanInterruptDisable(x)`
+- L612 `CanFlexCanInterruptRestore(x)`
+- L618 `C_HL_ENABLE_CAN_IRQ_DISABLE`
+- L620 `C_HL_DISABLE_CAN_IRQ_DISABLE`
+- L623 `C_HL_ENABLE_RETRANSMIT_CONF_ISR`
+- L625 `C_HL_DISABLE_RETRANSMIT_FCT`
+- L629 `CANDRV_RETRANSMIT_RAM_SECTION_START`
+- L632 `CANDRV_RETRANSMIT_RAM_SECTION_END`
+- L636 `C_CALLBACK_1`
+- L640 `C_CALLBACK_2`
+- L644 `C_API_1`
+- L648 `C_API_2`
+- L652 `C_API_3` = `REENTRANT`
+- L656 `REENTRANT`
+- L661 `C_ENABLE_ERROR_POLLING`
+- L666 `C_ENABLE_TASK_RECURSION_CHECK`
+- L670 `C_SUPPORTS_MULTI_ECU_PHYS`
+- L678 `kCanNoCopyData` = `((vuint8)0x00)`
+- L679 `kCanCopyData` = `((vuint8)0x01)`
+- L682 `kCanTxOff` = `((vuint8)0x00)`
+- L683 `kCanStatusInit` = `((vuint8)0x00)`
+- L684 `kCanTxOn` = `((vuint8)0x01)`
+- L685 `kCanTxNotOn` = `((vuint8)0xFE)              /* internal use only */`
+- L686 `kCanHwIsStop` = `((vuint8)0x02)`
+- L687 `kCanHwIsInit` = `((vuint8)0x04)`
+- L688 `kCanHwIsInconsistent` = `((vuint8)0x08)              /* used of for common CAN */`
+- L689 `kCanHwIsWarning` = `((vuint8)0x10)`
+- L690 `kCanHwIsPassive` = `((vuint8)0x20)`
+- L691 `kCanHwIsBusOff` = `((vuint8)0x40)`
+- L692 `kCanHwIsSleep` = `((vuint8)0x80)`
+- L695 `kCanTxFailed` = `((vuint8)0x00)  /* Tx path switched off or no sending possible */`
+- L696 `kCanTxOk` = `((vuint8)0x01)  /* msg transmitted or in queue                 */`
+- L697 `kCanTxPartOffline` = `((vuint8)0x02)  /* Tx path switched part off or           */`
+- L698 `kCanCommunicationDisabled` = `((vuint8)0x03)  /* if application has disabled com after memory check */`
+- L701 `kCanTxNotify` = `((vuint8)0x05)  /* internal returncode only - not used for the API */`
+- L705 `kCanNoTxDynObjAvailable` = `((CanTransmitHandle)0xFFFFFFFFU)`
+- L708 `kCanDynReleased` = `((vuint8)0x00)`
+- L709 `kCanDynNotReleased` = `((vuint8)0x01)`
+- L712 `kCanFailed` = `((vuint8)0x00)`
+- L713 `kCanOk` = `((vuint8)0x01)`
+- L714 `kCanNotSupported` = `((vuint8)0x02)`
+- L716 `kCanFalse` = `((vuint8)0x00)`
+- L717 `kCanTrue` = `((vuint8)0x01)`
+- L720 `kCanRamCheckFailed` = `((vuint8)0x00)`
+- L721 `kCanRamCheckOk` = `((vuint8)0x01)`
+- L722 `kCanDisableCommunication` = `((vuint8)0x00)`
+- L723 `kCanEnableCommunication` = `((vuint8)0x01)`
+- L727 `kCanDLC` = `(0x0Fu)`
+- L728 `kCanIdTypeStd` = `(0x00u)`
+- L729 `kCanIdTypeExt` = `(0x60u)`
+- L730 `CAN_IDTYPE_STD` = `(vuint32)(0x00)`
+- L731 `CAN_IDTYPE_EXT` = `(vuint32)(0x00600000)`
+- L734 `kCanDriverBusoff` = `(0x01u)   /* CAN driver is in recovery phase after bus off */`
+- L735 `kCanDriverBusoffInit` = `(0x02u)   /* Driver finished recovery and needs to be initialized */`
+- L736 `kCanDriverNormal` = `(0x03u)   /* Driver completed recovery and is in normal mode */`
+- L742 `kCanTxPartInit` = `((vuint8)0x00)`
+- L745 `kCanAllChannels` = `((CanChannelHandle)0xFFU)`
+- L747 `kCanChannelNotUsed` = `((CanChannelHandle)0xFFU)`
+- L750 `kCanRxHandleNotUsed` = `((CanReceiveHandle)  0xFFFFFFFFU)`
+- L751 `kCanTxHandleNotUsed` = `((CanTransmitHandle) 0xFFFFFFFFU)`
+- L754 `kCanRxHandleRange0` = `((CanReceiveHandle)  0xFFFFFFF0U)`
+- L755 `kCanRxHandleRange1` = `((CanReceiveHandle)  0xFFFFFFF1U)`
+- L756 `kCanRxHandleRange2` = `((CanReceiveHandle)  0xFFFFFFF2U)`
+- L757 `kCanRxHandleRange3` = `((CanReceiveHandle)  0xFFFFFFF3U)`
+- L761 `kCanObjectHandleNotUsed` = `((CanObjectHandle)0xFFU)`
+- L765 `kCanBufferFree` = `((CanTransmitHandle)0xFFFFFFFFU)   /* mark a transmit object is free */`
+- L766 `kCanBufferCancel` = `((CanTransmitHandle)0xFFFFFFFEU)   /* mark a transmit object as canceled */`
+- ... 생략 336개 (동일 패턴의 생성 심볼)
+
+#### 주요 typedef/구조체
+- L1359 `typedef vuint32 tCanQueueElementType;`
+- L1498 `typedef struct`
+- L1506 `typedef struct`
+- L1518 `typedef volatile struct`
+- L1536 `typedef volatile struct`
+- L1547 `typedef volatile struct`
+- L1554 `typedef volatile struct`
+- L1577 `typedef volatile struct`
+- L1585 `typedef volatile struct`
+- L2436 `typedef volatile struct`
+- L2458 `typedef volatile struct`
+- L2468 `typedef volatile struct`
+- L2501 `typedef struct`
+- L2510 `typedef struct`
+- L2519 `typedef struct`
+- L2528 `typedef tCanRxInfoStruct          *CanRxInfoStructPtr;`
+- L2529 `typedef tCanTxInfoStruct          CanTxInfoStruct;`
+- L2531 `typedef tCanTxConfInfoStruct      *CanTxInfoStructPtr;`
+- L2534 `typedef C_CALLBACK_1 vuint8   (C_CALLBACK_2 *ApplCanMsgRcvFct)    (CanRxInfoStructPtr rxStruct);`
+- L2535 `typedef C_CALLBACK_1 vuint8   (C_CALLBACK_2 *ApplRangeFct)        (CanRxInfoStructPtr rxStruct);`
+- L2536 `typedef C_CALLBACK_1 vuint8   (C_CALLBACK_2 *ApplPrecopyFct)      (CanRxInfoStructPtr rxStruct);`
+- L2537 `typedef C_CALLBACK_1 void     (C_CALLBACK_2 *ApplIndicationFct)   (CanReceiveHandle rxObject);`
+- L2538 `typedef C_CALLBACK_1 void     (C_CALLBACK_2 *ApplConfirmationFct) (CanTransmitHandle txObject);`
+- L2539 `typedef C_CALLBACK_1 vuint8   (C_CALLBACK_2 *ApplPreTransmitFct)  (CanTxInfoStruct txStruct);`
+- L2540 `typedef C_CALLBACK_1 void     (C_CALLBACK_2 *ApplChannelFct)      (CAN_CHANNEL_CANTYPE_ONLY);`
+- L2542 `typedef struct`
+- L2560 `typedef struct`
+- L2624 `typedef struct`
+- L2633 `typedef struct`
+
+#### 주요 전역 변수/테이블 선언
+- L304 `|                       Ml   - ESCAN00008064: encapsulated CanRxHashId in case of array dimension == 0`
+- L1504 `}tCanInitObject;`
+- L1512 `}tCanInitBasicCan;`
+- L1521 `volatile vuint32 lowerflags;`
+- L1523 `volatile vuint32 upperflags;`
+- L1527 `volatile vuint16 canctrl0;`
+- L1530 `volatile vuint16 canmcr;`
+- L1532 `}tCanLLCanIntOld;`
+- L1545 `}tCanRxMsgBuffer;`
+- L1549 `volatile vuint32 data[2];`
+- L1550 `}tCanTxMsgBuffer;`
+- L1556 `volatile vuint32 DlcRaw;`
+- L1558 `volatile vuint16 IdRaw1;`
+- L1559 `volatile vuint16 IdRaw0;`
+- L1561 `volatile vuint8  DataFld[8];`
+- L1562 `volatile vuint16 TimeStamp;`
+- L1563 `}tCanMsgTransmitStruct;`
+- L1584 `}tCanMsgObj;`
+- L1588 `volatile vuint32 R;`
+- L1590 `volatile vuint32 REL:4;`
+- L1591 `volatile vuint32 STEP:4;`
+- L1592 `volatile vuint32 SUBSTEP:4;`
+- L1593 `volatile vuint32 YEAR:4;`
+- L1594 `volatile vuint32 MON:8;`
+- L1595 `volatile vuint32 DAY:8;`
+- L1600 `volatile vuint32 R;`
+- L1602 `volatile vuint32 ETV:32;`
+- L1606 `volatile vuint8 ADR_reserved0[4];`
+- L1609 `volatile vuint32 R;`
+- L1611 `volatile vuint32 unused_2:8;`
+- L1612 `volatile vuint32 TDC:1;`
+- L1613 `volatile vuint32 unused_1:2;`
+- L1614 `volatile vuint32 DBRP:5;`
+- L1615 `volatile vuint32 unused_0:3;`
+- L1616 `volatile vuint32 DTSEG1:5;`
+- L1617 `volatile vuint32 DTSEG2:4;`
+- L1618 `volatile vuint32 DSJW:4;`
+- L1623 `volatile vuint32 R;`
+- L1625 `volatile vuint32 unused_1:24;`
+- L1626 `volatile vuint32 RX:1;`
+- L1627 `volatile vuint32 TX:2;`
+- L1628 `volatile vuint32 LBCK:1;`
+- L1629 `volatile vuint32 unused_0:4;`
+- L1634 `volatile vuint32 R;`
+- L1636 `volatile vuint32 unused_0:16;`
+- L1637 `volatile vuint32 WDV:8;`
+- L1638 `volatile vuint32 WDC:8;`
+- L1643 `volatile vuint32 R;`
+- L1645 `volatile vuint32 unused_1:16;`
+- L1646 `volatile vuint32 NISO:1;`
+- L1647 `volatile vuint32 TXP:1;`
+- L1648 `volatile vuint32 EFBI:1;`
+- L1649 `volatile vuint32 PXHD:1;`
+- L1650 `volatile vuint32 unused_0:2;`
+- L1651 `volatile vuint32 BRSE:1;`
+- L1652 `volatile vuint32 FDOE:1;`
+- L1653 `volatile vuint32 TEST:1;`
+- L1654 `volatile vuint32 DAR:1;`
+- L1655 `volatile vuint32 MON:1;`
+- L1656 `volatile vuint32 CSR:1;`
+- L1657 `volatile vuint32 CSA:1;`
+- L1658 `volatile vuint32 ASM:1;`
+- L1659 `volatile vuint32 CCE:1;`
+- L1660 `volatile vuint32 INIT:1;`
+- L1665 `volatile vuint32 R;`
+- L1667 `volatile vuint32 NSJW:7;`
+- L1668 `volatile vuint32 NBRP:9;`
+- L1669 `volatile vuint32 NTSEG1:8;`
+- L1670 `volatile vuint32 unused_0:1;`
+- L1671 `volatile vuint32 NTSEG2:7;`
+- L1676 `volatile vuint32 R;`
+- L1678 `volatile vuint32 unused_1:12;`
+- L1679 `volatile vuint32 TCP:4;`
+- L1680 `volatile vuint32 unused_0:14;`
+- L1681 `volatile vuint32 TSS:2;`
+- L1686 `volatile vuint32 R;`
+- L1688 `volatile vuint32 unused_0:16;`
+- L1689 `volatile vuint32 TSC:16;`
+- L1694 `volatile vuint32 R;`
+- L1696 `volatile vuint32 TOP:16;`
+- L1697 `volatile vuint32 unused_0:13;`
+- L1698 `volatile vuint32 TOS:2;`
+- L1699 `volatile vuint32 ETOC:1;`
+- L1704 `volatile vuint32 R;`
+- L1706 `volatile vuint32 unused_0:16;`
+- L1707 `volatile vuint32 TOC:16;`
+- L1711 `volatile vuint8 ADR_reserved1[16];`
+- L1714 `volatile vuint32 R;`
+- L1716 `volatile vuint32 unused_0:8;`
+- L1717 `volatile vuint32 CEL:8;`
+- L1718 `volatile vuint32 RP:1;`
+- L1719 `volatile vuint32 REC:7;`
+- L1720 `volatile vuint32 TEC:8;`
+- L1725 `volatile vuint32 R;`
+- L1727 `volatile vuint32 unused_1:9;`
+- L1728 `volatile vuint32 TDCV:7;`
+- L1729 `volatile vuint32 unused_0:1;`
+- L1730 `volatile vuint32 PXE:1;`
+- L1731 `volatile vuint32 RFDF:1;`
+- L1732 `volatile vuint32 RBRS:1;`
+- ... 생략 643개 (동일 패턴의 생성 심볼)
+
+### 3. 파일 내 함수명
+
+- 함수 선언/정의 후보 수: 115
+
+- L952 `defined(C_ENABLE_TRANSMIT_QUEUE ) /* set confirmation active for CanReleaseDynTxObj() */ # if defined( C_SINGLE_RECEIVE_CHANNEL ) # define CanConfirmStart(txHandle)` [정의]
+- L1151 `CanMsgTransmitSetExtId(pCanMsgTransmitStruct, id) (pCanMsgTransmitStruct)->IdRaw1 = MK_EXTID_HI(id)` [선언]
+- L1155 `MK_EXTID_LO(id)` [선언]
+- L3044 `ApplCanBusOff(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3047 `ApplCanWakeUp(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3052 `ApplCanPreWakeUp(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3057 `ApplCanOverrun(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3062 `ApplCanFullCanOverrun(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3070 `ApplCanRange0Precopy(CanRxInfoStructPtr rxStruct)` [선언]
+- L3075 `ApplCanRange1Precopy(CanRxInfoStructPtr rxStruct)` [선언]
+- L3080 `ApplCanRange2Precopy(CanRxInfoStructPtr rxStruct)` [선언]
+- L3085 `ApplCanRange3Precopy(CanRxInfoStructPtr rxStruct)` [선언]
+- L3092 `ApplCanMsgCondReceived(CanRxInfoStructPtr rxStruct)` [선언]
+- L3099 `ApplCanCorruptMailbox(CAN_CHANNEL_CANTYPE_FIRST CanObjectHandle hwObjHandle)` [선언]
+- L3103 `ApplCanMemCheckFailed(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3111 `APPL_CAN_MSGRECEIVED(CanRxInfoStructPtr rxStruct)` [선언]
+- L3119 `ApplCanMsgDlcFailed(CanRxInfoStructPtr rxStruct)` [선언]
+- L3125 `APPL_CAN_GENERIC_PRECOPY(CanRxInfoStructPtr rxStruct)` [선언]
+- L3131 `ApplCanMsgNotMatched(CanRxInfoStructPtr rxStruct)` [선언]
+- L3138 `APPL_CAN_TX_CONFIRMATION(CanTxInfoStructPtr txStruct)` [선언]
+- L3144 `ApplCanTxObjStart(CAN_CHANNEL_CANTYPE_FIRST CanObjectHandle txHwObject)` [선언]
+- L3147 `ApplCanTxObjConfirmed(CAN_CHANNEL_CANTYPE_FIRST CanObjectHandle txHwObject)` [선언]
+- L3150 `ApplCanInit(CAN_CHANNEL_CANTYPE_FIRST CanObjectHandle txHwObjectFirstUsed, CanObjectHandle txHwObjectFirstUnused)` [선언]
+- L3156 `ApplCanTimerStart(CAN_CHANNEL_CANTYPE_FIRST vuint8 source)` [선언]
+- L3159 `ApplCanTimerLoop(CAN_CHANNEL_CANTYPE_FIRST vuint8 source)` [선언]
+- L3162 `ApplCanTimerEnd(CAN_CHANNEL_CANTYPE_FIRST vuint8 source)` [선언]
+- L3168 `APPL_CAN_MSGTRANSMITCONF(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3171 `APPL_CAN_MSGTRANSMITINIT(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3179 `APPL_CAN_CANCELNOTIFICATION(CanTransmitHandle txHandle)` [선언]
+- L3184 `APPL_CAN_MSGCANCELNOTIFICATION(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3192 `ApplCanPreRxQueue(CanRxInfoStructPtr pCanRxInfoStruct)` [선언]
+- L3197 `ApplCanRxQueueOverrun(void)` [선언]
+- L3204 `ApplCanChannelDummy(CanChannelHandle channel)` [선언]
+- L3208 `ApplCanTxHandleDummy(CanTransmitHandle txHandle)` [선언]
+- L3213 `ApplCanRxStructPtrDummy(CanRxInfoStructPtr rxStruct)` [선언]
+- L3218 `ApplCanRxHandleDummy(CanReceiveHandle rxHandle)` [선언]
+- L3221 `ApplCanTxStructDummy(CanTxInfoStruct txStruct)` [선언]
+- L3226 `APPL_CAN_OFFLINE(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3229 `APPL_CAN_ONLINE(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3249 `CanInitPowerOn(void)` [선언]
+- L3252 `CanInit(CAN_CHANNEL_CANTYPE_FIRST CanInitHandle initObject)` [선언]
+- L3265 `CanCancelTransmit(CanTransmitHandle txHandle)` [선언]
+- L3274 `CanMsgTransmit(CAN_CHANNEL_CANTYPE_FIRST V_MEMRAM1_FAR tCanMsgTransmitStruct V_MEMRAM2_FAR V_MEMRAM3_FAR *txMsgStruct)` [선언]
+- L3276 `CanMsgTransmit(CAN_CHANNEL_CANTYPE_FIRST tCanMsgTransmitStruct *txMsgStruct)` [선언]
+- L3282 `CanCancelMsgTransmit(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3289 `CanOnline(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3298 `CanSetPartOffline(CAN_CHANNEL_CANTYPE_FIRST vuint8 sendGroup)` [선언]
+- L3301 `CanSetPartOnline(CAN_CHANNEL_CANTYPE_FIRST vuint8 invSendGroup)` [선언]
+- L3304 `CanGetPartMode(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3314 `CanSleep(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3317 `CanWakeUp(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3322 `CanSetActive(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3325 `CanSetPassive(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3339 `CanStart(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3342 `CanStop(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3356 `defined(C_ENABLE_RX_BASICCAN_POLLING ) || \ defined( C_ENABLE_ERROR_POLLING ) || \ defined( C_ENABLE_WAKEUP_POLLING ) || \ (defined( C_HL_ENABLE_CANCEL_IN_HW_TASK ) && defined( C_ENABLE_CANCEL_IN_HW )) /* CODE CATEGORY 2 START */ C_API_1 void C_API_2 CanTask(void)` [선언]
+- L3372 `CanTxObjTask(CAN_HW_CHANNEL_CANTYPE_FIRST CanObjectHandle txObjHandle)` [선언]
+- L3379 `CanErrorTask(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3385 `CanWakeUpTask(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3396 `CanRxFullCANObjTask(CAN_HW_CHANNEL_CANTYPE_FIRST CanObjectHandle rxObjHandle)` [선언]
+- L3407 `CanRxBasicCANObjTask(CAN_HW_CHANNEL_CANTYPE_FIRST CanObjectHandle rxObjHandle)` [선언]
+- L3450 `CanSetTxIdExtHi(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [선언]
+- L3453 `CanSetTxIdExtMidHi(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [선언]
+- L3456 `CanSetTxIdExtMidLo(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [선언]
+- L3459 `CanSetTxIdExtLo(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [선언]
+- L3471 `CanSetMsgReceivedCondition(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3474 `CanResetMsgReceivedCondition(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3477 `CanGetMsgReceivedCondition(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3483 `CanDeleteRxQueue(void)` [선언]
+- L3486 `CanHandleRxMsg(void)` [선언]
+- L3493 `CanBaseAddressRequest(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3496 `CanBaseAddressActivate(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3505 `Appl_CanSleep(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3512 `CanCopyToCan(CanChipDataPtr dst, CanChipVoidPtr src, vuint8 len)` [선언]
+- L3515 `CanCopyFromCan(CanChipVoidPtr dst, CanChipDataPtr src, vuint8 len)` [선언]
+- L3523 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanInterrupt( CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3536 `CanBusOffInterrupt(CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3541 `CanWakeUpInterrupt(CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3546 `CanMB0To31Interrupt(CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L3564 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanIsr_0( void)` [선언]
+- L3573 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanIsr_1( void)` [선언]
+- L3582 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanIsr_2( void)` [선언]
+- L3591 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanIsr_3( void)` [선언]
+- L3600 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanIsr_4( void)` [선언]
+- L3609 `defined(C_ENABLE_CAN_WAKEUP_INTERRUPT ) /* CODE CATEGORY 1 START */ V_DEF_FUNC_API(V_NONE, void, CODE) CanIsr_5( void)` [선언]
+- L3624 `CanBusOffIsr_0(void)` [선언]
+- L3629 `CanWakeUpIsr_0(void)` [선언]
+- L3634 `CanMB0To15Isr_0(void)` [선언]
+- L3635 `CanMB16To31Isr_0(void)` [선언]
+- L3639 `CanMB32To63Isr_0(void)` [선언]
+- L3647 `CanBusOffIsr_1(void)` [선언]
+- L3652 `CanWakeUpIsr_1(void)` [선언]
+- L3657 `CanMB0To15Isr_1(void)` [선언]
+- L3658 `CanMB16To31Isr_1(void)` [선언]
+- L3662 `CanMB32To63Isr_1(void)` [선언]
+- L3670 `CanBusOffIsr_2(void)` [선언]
+- L3675 `CanWakeUpIsr_2(void)` [선언]
+- L3680 `CanMB0To15Isr_2(void)` [선언]
+- L3681 `CanMB16To31Isr_2(void)` [선언]
+- L3685 `CanMB32To63Isr_2(void)` [선언]
+- L3693 `CanBusOffIsr_3(void)` [선언]
+- L3698 `CanWakeUpIsr_3(void)` [선언]
+- L3703 `CanMB0To15Isr_3(void)` [선언]
+- L3704 `CanMB16To31Isr_3(void)` [선언]
+- L3708 `CanMB32To63Isr_3(void)` [선언]
+- L3716 `CanBusOffIsr_4(void)` [선언]
+- L3721 `CanWakeUpIsr_4(void)` [선언]
+- L3726 `CanMB0To15Isr_4(void)` [선언]
+- L3727 `CanMB16To31Isr_4(void)` [선언]
+- L3731 `CanMB32To63Isr_4(void)` [선언]
+- L3739 `CanBusOffIsr_5(void)` [선언]
+- L3744 `CanWakeUpIsr_5(void)` [선언]
+- L3749 `CanMB0To15Isr_5(void)` [선언]
+- L3750 `CanMB16To31Isr_5(void)` [선언]
+- L3754 `CanMB32To63Isr_5(void)` [선언]
+
+### 4. 각 함수별 역할 설명
+
+- `defined` (L952, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanMsgTransmitSetExtId` (L1151, 선언): Macros to fill variables of the type tCanMsgTransmitStruct
+- `MK_EXTID_LO` (L1155, 선언): Macros to fill variables of the type tCanMsgTransmitStruct
+- `ApplCanBusOff` (L3044, 선언): CAN 버스오프 감지, 복구 타이밍, 통신 중단/재시작 상태를 처리한다.
+- `ApplCanWakeUp` (L3047, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `ApplCanPreWakeUp` (L3052, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `ApplCanOverrun` (L3057, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanFullCanOverrun` (L3062, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanRange0Precopy` (L3070, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanRange1Precopy` (L3075, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanRange2Precopy` (L3080, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanRange3Precopy` (L3085, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanMsgCondReceived` (L3092, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanCorruptMailbox` (L3099, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanMemCheckFailed` (L3103, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPL_CAN_MSGRECEIVED` (L3111, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanMsgDlcFailed` (L3119, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPL_CAN_GENERIC_PRECOPY` (L3125, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanMsgNotMatched` (L3131, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPL_CAN_TX_CONFIRMATION` (L3138, 선언): 송신 완료 통지나 확인 상태를 처리하고 상위 계층 콜백/플래그를 갱신한다.
+- `ApplCanTxObjStart` (L3144, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanTxObjConfirmed` (L3147, 선언): 송신 완료 통지나 확인 상태를 처리하고 상위 계층 콜백/플래그를 갱신한다.
+- `ApplCanInit` (L3150, 선언): 모듈 런타임 상태, 버퍼, 카운터, 하드웨어/생성 파라미터를 초기화한다.
+- `ApplCanTimerStart` (L3156, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanTimerLoop` (L3159, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanTimerEnd` (L3162, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPL_CAN_MSGTRANSMITCONF` (L3168, 선언): 송신 요청을 준비하거나 CAN/TP/진단 응답 전송을 시작한다.
+- `APPL_CAN_MSGTRANSMITINIT` (L3171, 선언): 모듈 런타임 상태, 버퍼, 카운터, 하드웨어/생성 파라미터를 초기화한다.
+- `APPL_CAN_CANCELNOTIFICATION` (L3179, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPL_CAN_MSGCANCELNOTIFICATION` (L3184, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanPreRxQueue` (L3192, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanRxQueueOverrun` (L3197, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanChannelDummy` (L3204, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanTxHandleDummy` (L3208, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanRxStructPtrDummy` (L3213, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanRxHandleDummy` (L3218, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanTxStructDummy` (L3221, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPL_CAN_OFFLINE` (L3226, 선언): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `APPL_CAN_ONLINE` (L3229, 선언): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanInitPowerOn` (L3249, 선언): 전원 인가 직후 한 번 수행되는 모듈 전역 초기화를 담당한다.
+- `CanInit` (L3252, 선언): 모듈 런타임 상태, 버퍼, 카운터, 하드웨어/생성 파라미터를 초기화한다.
+- `CanCancelTransmit` (L3265, 선언): 송신 요청을 준비하거나 CAN/TP/진단 응답 전송을 시작한다.
+- `CanMsgTransmit` (L3274, 선언): txMsgStruct is located in far memory
+- `CanMsgTransmit` (L3276, 선언): txMsgStruct is located in far memory
+- `CanCancelMsgTransmit` (L3282, 선언): 송신 요청을 준비하거나 CAN/TP/진단 응답 전송을 시작한다.
+- `CanOnline` (L3289, 선언): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanSetPartOffline` (L3298, 선언): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanSetPartOnline` (L3301, 선언): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanGetPartMode` (L3304, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSleep` (L3314, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `CanWakeUp` (L3317, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `CanSetActive` (L3322, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetPassive` (L3325, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanStart` (L3339, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanStop` (L3342, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3356, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanTxObjTask` (L3372, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanErrorTask` (L3379, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanWakeUpTask` (L3385, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanRxFullCANObjTask` (L3396, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanRxBasicCANObjTask` (L3407, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanSetTxIdExtHi` (L3450, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtMidHi` (L3453, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtMidLo` (L3456, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtLo` (L3459, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetMsgReceivedCondition` (L3471, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanResetMsgReceivedCondition` (L3474, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanGetMsgReceivedCondition` (L3477, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanDeleteRxQueue` (L3483, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHandleRxMsg` (L3486, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanBaseAddressRequest` (L3493, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBaseAddressActivate` (L3496, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `Appl_CanSleep` (L3505, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `CanCopyToCan` (L3512, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanCopyFromCan` (L3515, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3523, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBusOffInterrupt` (L3536, 선언): CAN 버스오프 감지, 복구 타이밍, 통신 중단/재시작 상태를 처리한다.
+- `CanWakeUpInterrupt` (L3541, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `CanMB0To31Interrupt` (L3546, 선언): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `defined` (L3564, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3573, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3582, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3591, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3600, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L3609, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBusOffIsr_0` (L3624, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanWakeUpIsr_0` (L3629, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB0To15Isr_0` (L3634, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB16To31Isr_0` (L3635, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB32To63Isr_0` (L3639, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanBusOffIsr_1` (L3647, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanWakeUpIsr_1` (L3652, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB0To15Isr_1` (L3657, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB16To31Isr_1` (L3658, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB32To63Isr_1` (L3662, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanBusOffIsr_2` (L3670, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanWakeUpIsr_2` (L3675, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB0To15Isr_2` (L3680, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB16To31Isr_2` (L3681, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB32To63Isr_2` (L3685, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanBusOffIsr_3` (L3693, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanWakeUpIsr_3` (L3698, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB0To15Isr_3` (L3703, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB16To31Isr_3` (L3704, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB32To63Isr_3` (L3708, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanBusOffIsr_4` (L3716, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanWakeUpIsr_4` (L3721, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB0To15Isr_4` (L3726, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB16To31Isr_4` (L3727, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB32To63Isr_4` (L3731, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanBusOffIsr_5` (L3739, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanWakeUpIsr_5` (L3744, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB0To15Isr_5` (L3749, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB16To31Isr_5` (L3750, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CanMB32To63Isr_5` (L3754, 선언): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+
+### 5. 필요시 코드 부연 설명
+
+이 파일은 생성 설정/선언 성격이 강해 별도 코드 전문 인용 없이 심볼 표로 역할을 설명했다.
+
+## CAN-FD 마이그레이션 관점
+
+CAN 계층은 HS-CAN에서 CAN-FD로 전환할 때 가장 큰 변경이 발생하는 계층이다. 기존 분석에서 확인한 `CanTransmit`, `CanMsgTransmit`, Rx task, ISR, Tx confirmation 흐름은 유지하되 frame 모델과 HAL 접근부를 확장해야 한다.
+
+- `data[8]` 또는 DLC 8 제한을 모두 식별한다.
+- Tx/Rx 설정에 `is_fd`, `brs`, `dlc`, `length`를 추가한다.
+- CAN-FD DLC 변환 함수로 실제 payload 길이와 DLC 값을 분리한다.
+- FD-capable controller의 data phase bitrate, FD mailbox payload size, BRS 설정을 초기화에 추가한다.
+- Classical CAN frame과 CAN-FD frame이 같은 Driver API에서 공존할 수 있게 한다.
+
+## 파일이름 : can_drv
+
+- 경로: `src/CBD/Can/can_drv.c`
+- 파일 종류: `.c`
+- 파일 크기: 344,197 bytes
+- 파일 내용: FlexCAN 하드웨어 드라이버 본체로 CAN 초기화, 송수신, 인터럽트, 큐, 버스 상태 전환을 구현한다.
+
+### 1. .c/.h 파일 이름
+
+- `can_drv.c`
+
+### 2. 파일 내 변수, 매크로 등 전역 심볼
+
+- 매크로 수: 355
+- typedef/struct/enum 후보 수: 5
+- 전역 변수/테이블 선언 후보 수: 177
+
+#### 주요 매크로
+- L7 `C_DRV_INTERNAL`
+- L29 `kCanHlFinishRx` = `((vuint8)0x00)`
+- L30 `kCanHlContinueRx` = `((vuint8)0x01)`
+- L32 `CANHL_TX_QUEUE_BIT`
+- L36 `kFlexCAN_MDIS` = `((vuint16)0x8000)     /* Module Disable: shut down FlexCAN clocks */`
+- L37 `kFlexCAN_FRZ` = `((vuint16)0x4000)     /* Freeze Enable: allow entering the freeze mode */`
+- L38 `kFlexCAN_FEN` = `((vuint16)0x2000)     /* FIFO enable */`
+- L39 `kFlexCAN_HALT` = `((vuint16)0x1000)     /* Halt FlexCAN: request entering the freeze mode */`
+- L40 `kFlexCAN_NOT_RDY` = `((vuint16)0x0800)     /* Not Ready: FlexCAN is in DISABLE, DOZE or STOP mode */`
+- L41 `kFlexCAN_WAK_MSK` = `((vuint16)0x0400)     /* Wakeup Interrupt Mask: enable wakeup interrupt generation */`
+- L42 `kFlexCAN_SOFT_RST` = `((vuint16)0x0200)     /* Soft Reset: reset FlexCAN internal state and some memory mapped registers */`
+- L43 `kFlexCAN_FRZ_ACK` = `((vuint16)0x0100)     /* Freeze Mode Acknowledge */`
+- L44 `kFlexCAN_SUPV` = `((vuint16)0x0080)     /* Supervisor Mode */`
+- L45 `kFlexCAN_SLF_WAK` = `((vuint16)0x0040)     /* FlexCAN Self Wakeup by CAN bus activity */`
+- L46 `kFlexCAN_WRN_EN` = `((vuint16)0x0020)     /* Warning Interrupt Enable */`
+- L47 `kFlexCAN_LPM_ACK` = `((vuint16)0x0010)     /* Low Power Mode Acknowledge */`
+- L48 `kFlexCAN_WAK_SRC` = `((vuint16)0x0008)     /* Wakeup Source: enable filtered Rx input signal */`
+- L49 `kFlexCAN_DOZE` = `((vuint16)0x0004)     /* Doze Mode Enable: allow MCU to switch FlexCAN into DOZE low power mode */`
+- L50 `kFlexCAN_NOT_DOZE` = `((vuint16)0xFFFB)     /* Doze Mode Disable: do not allow MCU to switch FlexCAN into DOZE low power mode */`
+- L51 `kFlexCAN_SRX_DIS` = `((vuint16)0x0002)     /* Self Reception Disable */`
+- L52 `kFlexCAN_BCC` = `((vuint16)0x0001)     /* Backwards Compatibility Configuration: enable Individual Rx Masks */`
+- L54 `kFlexCAN_LPPRIO_EN` = `((vuint16)0x2000)     /* Local Priority Enable */`
+- L55 `kFlexCAN_AEN` = `((vuint16)0x1000)     /* Abort Enable: enables transmit abort feature */`
+- L56 `kFlexCAN_IDAM` = `((vuint16)0x0300)     /* ID Acceptance Mode */`
+- L57 `kFlexCAN_MAXMB` = `((vuint16)0x003F)     /* Maximum Number of Message Buffers: maximum number of used message buffers = MAXMB+1 */`
+- L59 `kFlexCAN_BOFF_MSK` = `((vuint16)0x8000)     /* FlexCAN BusOff interrupt mask */`
+- L60 `kFlexCAN_LOM` = `((vuint16)0x0008)     /* FlexCAN Listen Only Mode */`
+- L63 `kFlexCAN_WAKE_INT` = `((vuint32)0x0001)    /* Wake Up interrupt flag */`
+- L64 `kMCAN_ERR_INT` = `((vuint32)0x01800000)    /* Error interrupt flag */`
+- L65 `kMCAN_BOFF_INT` = `((vuint32)0x02000000)    /* Bus Off interrupt flag */`
+- L66 `kFlexCAN_FCS_BOFF` = `((vuint32)0x0020)    /* Fault Confinement State value for BusOff */`
+- L67 `kFlexCAN_FCS_EP` = `((vuint32)0x0010)    /* Fault Confinement State value for ErrorPassive */`
+- L68 `kFlexCAN_FCS` = `((vuint32)0x0030)    /* Fault Confinement State */`
+- L69 `kFlexCAN_RXTX_WARN` = `((vuint32)0x0300)`
+- L72 `kFlexCAN_SMP` = `((vuint16)0x0080)    /* FlexCAN sampling mode */`
+- L73 `kFlexCAN_CLK_SRC` = `((vuint16)0x2000)    /* FlexCAN clock source mask */`
+- L74 `kFlexCAN_BOFF_REC` = `((vuint16)0x0040)    /* FlexCAN auto BusOff recovery */`
+- L76 `kFlexCAN_NOT_MDIS` = `((vuint16)0x7FFF)`
+- L77 `kFlexCAN_NOT_MCR` = `((vuint16)0xD910)`
+- L78 `kFlexCAN_NOT_HALT` = `((vuint16)0xEFFF)`
+- L79 `kFlexCAN_NOT_FRZ` = `((vuint16)0xBFFF)`
+- L80 `kFlexCAN_NOT_WAK_MSK` = `((vuint16)0xFBFF)`
+- L81 `kFlexCAN_NOT_SLF_WAK` = `((vuint16)0xFFBF)`
+- L83 `kFlexCAN_MDIS_SLFWAKE_MASK` = `(kFlexCAN_MDIS | kFlexCAN_SLF_WAK | kFlexCAN_WAK_MSK)`
+- L84 `kFlexCAN_MCR` = `(kFlexCAN_MDIS | kFlexCAN_FRZ | kFlexCAN_HALT | kFlexCAN_NOT_RDY | kFlexCAN_FRZ_ACK | kFlexCAN_LPM_ACK)`
+- L85 `kFlexCAN_FREEZE_MODE` = `(kFlexCAN_FRZ | kFlexCAN_HALT | kFlexCAN_NOT_RDY | kFlexCAN_FRZ_ACK) /* FlexCAN in FREEZE mode: FRZ, HALT, NOT_RDY and F...`
+- L86 `kFlexCAN_DOZE_MODE` = `(kFlexCAN_NOT_RDY | kFlexCAN_LPM_ACK | kFlexCAN_DOZE) /* FlexCAN in DOZE powerdown mode: NOT_RDY, LPM_ACK and DOZE are b...`
+- L87 `kFlexCAN_DISABLE_MODE` = `(kFlexCAN_MDIS | kFlexCAN_NOT_RDY | kFlexCAN_LPM_ACK) /* FlexCAN in DISABLE powerdown mode: MDIS, NOT_RDY and LPM_ACK bi...`
+- L89 `kNotFlexCANWakeMsk` = `((vuint16)0xFBFF)`
+- L90 `kNotFlexCANErrBoff` = `((vuint16)0x3FFF)`
+- L93 `CANSFR_TYPE` = `vuint32`
+- L94 `CANSFR_CAST` = `(vuint32)`
+- L95 `CANSFR_CLEAR` = `((vuint32)0x00000000)`
+- L96 `CANSFR_SET` = `((vuint32)0xFFFFFFFF)`
+- L99 `kCodeMask` = `((vuint16)0x0F00)     /* Mask to access the CODE in the control/status word */`
+- L100 `kNotDlcMask` = `((vuint32)0xFF000000)`
+- L101 `kNotCodeMask` = `((vuint32)0xF0FF0000)`
+- L104 `kRxCodeEmpty` = `((vuint32)0x04000000) /* Message buffer is active and empty */`
+- L105 `kRxCodeClear` = `((vuint32)0x00F00000) /* Mask to clear control register but leave the ID type */`
+- L106 `kRxCodeOverrun` = `((vuint16)0x0600)     /* Second frame was received into a full buffer */`
+- L107 `kRxCodeBusy` = `((vuint16)0x0100)     /* Receive buffer locked */`
+- L111 `kNotIDEMask` = `((vuint32)0xFF0F0000)`
+- L112 `kTxCodeTransmit` = `((vuint32)0x0C000000) /* Start transmit session */`
+- L113 `kTxDlcMask` = `((vuint32)0x006F0000) /* Mask to access the DLC in the control/status word */`
+- L115 `kNotIDEMask` = `((vuint16)0xFF0F)`
+- L116 `kTxCodeTransmit` = `((vuint16)0x0C00)     /* Start transmit session */`
+- L117 `kTxDlcMask` = `((vuint16)0x006F)     /* Mask to access the DLC in the control/status word */`
+- L119 `kTxCodeFree` = `((vuint16)0x0800)      /* Transmit object free */`
+- L120 `kTxCodeAbort` = `((vuint32)0x09000000)  /* Abort message transmission */`
+- L123 `kTxCodeInactive` = `((vuint32)0x08200000)  /* Transmit object inactive for extended or mixed IDs */`
+- L125 `kTxCodeInactive` = `((vuint32)0x08000000)  /* Transmit object inactive for standard IDs */`
+- L129 `kCanRxMaskStd` = `((vuint32)0x1FFC0000)`
+- L132 `kCanRxMaskExt` = `((vuint32)C_MASK_EXT_ID)`
+- L134 `kCanRxMaskExt` = `((vuint32)0x1FFFFFFF)`
+- L140 `kRxFIFO_OVERRUN` = `(vuint32)0x0080`
+- L141 `kRxFIFO_WARN` = `(vuint32)0x0040`
+- L142 `kRxFIFO_NEWMSG` = `(vuint32)0x0020`
+- L143 `kRxFIFO_EXT` = `(vuint32)0x40000000`
+- L144 `kRxFIFO_REM` = `(vuint32)0x80000000`
+- L145 `kRxFIFO_MASK` = `(vuint32)0xC0000000`
+- L147 `C_FLEXCAN_RXFIFO_MAXLOOP` = `5`
+- L159 `C_MASK_EXT_ID` = `((vuint32)0x1FFFFFFF)`
+- L163 `CAN_MSGID(x)` = `(vuint32)(x)`
+- L165 `CAN_MSGID(x)` = `((vuint32)(x) << 16)`
+- L173 `C_HL_ENABLE_RX_INFO_STRUCT_PTR`
+- L177 `CAN_HL_P_RX_INFO_STRUCT(channel)` = `(pCanRxInfoStruct)`
+- L178 `CAN_HL_P_RX_INFO_STRUCT_HANDLE(channel)` = `(pCanRxInfoStruct->Handle)`
+- L180 `CAN_HL_P_RX_INFO_STRUCT(channel)` = `(&canRxInfoStruct[channel])`
+- L181 `CAN_HL_P_RX_INFO_STRUCT_HANDLE(channel)` = `(canRxInfoStruct[channel].Handle)`
+- L191 `C_RANGE_MATCH_STD( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L193 `C_RANGE_MATCH_EXT( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L198 `C_RANGE_MATCH_STD( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L201 `C_RANGE_MATCH_EXT( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L207 `C_RANGE_MATCH_STD( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L211 `C_RANGE_MATCH_EXT( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L218 `C_RANGE_MATCH_STD( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L223 `C_RANGE_MATCH_EXT( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L231 `C_RANGE_MATCH_STD( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L237 `C_RANGE_MATCH_EXT( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L248 `C_RANGE_MATCH( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L253 `C_RANGE_MATCH( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L259 `C_RANGE_MATCH( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L266 `C_RANGE_MATCH( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L274 `C_RANGE_MATCH( CAN_RX_IDRAW_PARA, mask, code)` = `\`
+- L285 `CAN_RX_IDRAW_PARA` = `idRaw0`
+- L288 `CAN_RX_IDRAW_PARA` = `idRaw0, idRaw1`
+- L291 `CAN_RX_IDRAW_PARA` = `idRaw0, idRaw1, idRaw2`
+- L294 `CAN_RX_IDRAW_PARA` = `idRaw0, idRaw1, idRaw2, idRaw3`
+- L297 `CAN_RX_IDRAW_PARA` = `idRaw0, idRaw1, idRaw2, idRaw3, idRaw4`
+- L302 `channel` = `((CanChannelHandle)0)`
+- L303 `canHwChannel` = `((CanChannelHandle)0)`
+- L304 `CAN_HL_HW_CHANNEL_STARTINDEX(channel)` = `((CanChannelHandle)0)`
+- L305 `CAN_HL_HW_CHANNEL_STOPINDEX(channel)` = `((CanChannelHandle)0)`
+- L306 `CAN_HL_HW_MSG_TRANSMIT_INDEX(canHwChannel)` = `(kCanMsgTransmitObj)`
+- L307 `CAN_HL_HW_TX_NORMAL_INDEX(canHwChannel)` = `(kCanHwTxNormalIndex)`
+- L311 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel)` = `((vsintx)0-kCanHwTxStartIndex)`
+- L313 `CAN_HL_TX_STARTINDEX(channel)` = `((CanTransmitHandle)0)`
+- L314 `CAN_HL_TX_STAT_STARTINDEX(channel)` = `((CanTransmitHandle)0)`
+- L315 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)` = `(kCanNumberOfTxStatObjects)`
+- L316 `CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` = `((CanTransmitHandle)0)`
+- ... 생략 235개 (동일 패턴의 생성 심볼)
+
+#### 주요 typedef/구조체
+- L691 `typedef struct {`
+- L709 `typedef union tagTxFifo8 {`
+- L729 `typedef struct {`
+- L734 `typedef struct {`
+- L739 `typedef struct {`
+
+#### 주요 전역 변수/테이블 선언
+- L692 `vuint32 esi : 1;`
+- L693 `vuint32 xtd : 1;`
+- L694 `vuint32 rtr : 1;`
+- L695 `vuint32 stdId : 11;`
+- L696 `vuint32 extId : 18;`
+- L698 `vuint32 anmf : 1;`
+- L699 `vuint32 fidx : 7;`
+- L700 `vuint32 reserved : 2;`
+- L701 `vuint32 edl : 1;`
+- L702 `vuint32 brs : 1;`
+- L703 `vuint32 dlc : 4;`
+- L704 `vuint32 rxts : 16;`
+- L706 `vuint32 data[8/4];`
+- L710 `vuint32 R[4];`
+- L712 `vuint32 esi : 1;`
+- L713 `vuint32 xtd : 1;`
+- L714 `vuint32 rtr : 1;`
+- L715 `vuint32 id : 29;`
+- L717 `vuint32 mm : 8;`
+- L718 `vuint32 efc : 1;`
+- L719 `vuint32 reserved1 : 1;`
+- L720 `vuint32 fdf : 1;`
+- L721 `vuint32 brs : 1;`
+- L722 `vuint32 dlc : 4;`
+- L723 `vuint32 reserved2 : 16;`
+- L725 `vuint32 data[8/4];`
+- L737 `} tCanBufItem;`
+- L742 `vuint8 brs;`
+- L743 `vuint8 fdf;`
+- L744 `tCanBufItem sidFilter;`
+- L745 `tCanBufItem xidFilter;`
+- L746 `tCanBufItem rxBuffer;`
+- L747 `tCanBufItem rxFifo0;`
+- L748 `tCanBufItem rxFifo1;`
+- L749 `tCanBufItem txBuf;`
+- L750 `tCanBufItem txFifo;`
+- L751 `} tCanBufInfo;`
+- L761 `static const volatile tMcanPtr canRegMap[] = {`
+- L868 `static const tCanBufInfo canBufMap[] = {`
+- L982 `V_MEMROM0 static V_MEMROM1 tCanQueueElementType V_MEMROM2 CanShiftLookUp[1 << kCanTxQueueShift] =`
+- L1003 `V_MEMROM0 static V_MEMROM1 vsint8 V_MEMROM2 CanGetHighestFlagFromNibble[16] =        /* PRQA S 3218 */ /* Misra rule 8.7: only accessed in one function. - depends on configuration */`
+- L1073 `CanTransmitHandle          confirmHandle[kCanNumberOfChannels];`
+- L1092 `volatile vuint8 canVariableRxDataLen[kCanNumberOfRxObjects];`
+- L1116 `static volatile CanTransmitHandle canHandleCurTxObj[kCanNumberOfUsedTxCANObjects];`
+- L1121 `static vuint8 canPassive[kCanNumberOfChannels];`
+- L1131 `static volatile vuint8 canTxDynObjReservedFlag[kCanNumberOfTxDynObjects];`
+- L1134 `static tCanTxId0 canDynTxId0[kCanNumberOfTxDynObjects];`
+- L1136 `static tCanTxId1 canDynTxId1[kCanNumberOfTxDynObjects];`
+- L1139 `static tCanTxId2 canDynTxId2[kCanNumberOfTxDynObjects];`
+- L1142 `static tCanTxId3 canDynTxId3[kCanNumberOfTxDynObjects];`
+- L1145 `static tCanTxId4 canDynTxId4[kCanNumberOfTxDynObjects];`
+- L1148 `static tCanIdType                 canDynTxIdType[kCanNumberOfTxDynObjects];`
+- L1153 `static vuint8                   canDynTxDLC[kCanNumberOfTxDynObjects];`
+- L1156 `static TxDataPtr                  canDynTxDataPtr[kCanNumberOfTxDynObjects];`
+- L1164 `static tCanTxId0 canTxMask0[kCanNumberOfChannels];`
+- L1166 `static tCanTxId1 canTxMask1[kCanNumberOfChannels];`
+- L1169 `static tCanTxId2 canTxMask2[kCanNumberOfChannels];`
+- L1172 `static tCanTxId3 canTxMask3[kCanNumberOfChannels];`
+- L1175 `static tCanTxId4 canTxMask4[kCanNumberOfChannels];`
+- L1180 `static vuint8 canTxDLC_RAM[kCanNumberOfTxObjects];`
+- L1183 `static volatile vuint8 canStatus[kCanNumberOfChannels];`
+- L1186 `static vuint8 canTxPartOffline[kCanNumberOfChannels];`
+- L1193 `static tCanLLCanIntOld canCanInterruptOldStatus[kCanNumberOfHwChannels];`
+- L1199 `static CanInitHandle lastInitObject[kCanNumberOfChannels];`
+- L1209 `static vuint8 canPollingTaskActive[kCanNumberOfChannels];`
+- L1216 `static tCanRxInfoStruct        canRxInfoStruct[kCanNumberOfChannels];`
+- L1220 `static tCanTxConfInfoStruct    txInfoStructConf[kCanNumberOfChannels];`
+- L1224 `static volatile vuint8 canMsgCondRecState[kCanNumberOfChannels];`
+- L1234 `static volatile tCanQueueElementType canTxQueueFlags[kCanTxQueueSize];`
+- L1781 `vuint16  canMcrReg;`
+- L1782 `vuint8   loopResult;`
+- L1927 `vuint8    index;`
+- L1928 `vuint8    result;`
+- L1929 `vuint16   origDLC;`
+- L1930 `vuint16   origIDL;`
+- L1931 `vuint16   origIDH;`
+- L2025 `vuint16  index;`
+- L2026 `vuint32  iFlags;`
+- L2027 `vuint32  iMaskLo;`
+- L2029 `vuint32  iMaskHi = 0;`
+- L2329 `vuint16  index;`
+- L2334 `vuint16 rxHandle;`
+- L2337 `tCanRxInfoStruct    *pCanRxInfoStruct;`
+- L2346 `vuint32  iFlags;`
+- L2411 `rxHandle = CanRxMsgIndirection[rxHandle];`
+- L3631 `vuint8                 canRamCheckStatus;`
+- L3633 `CanObjectHandle        hwObjHandle;`
+- L3636 `CanTransmitHandle      txHandle;`
+- L3639 `CanReceiveHandle       rxHandle;`
+- L3641 `CanObjectHandle        logTxObjHandle;`
+- L3644 `vuint32 canIntMaskLo;`
+- L3646 `vuint32 canIntMaskHi;`
+- L3652 `vuint8   locRxHandle;`
+- L3655 `vuint8   locRxHandle;`
+- L3660 `vuint16 index;`
+- L3666 `vuint16  locMsgIDMaskHi;`
+- L3667 `vuint16  locMsgIDMaskLo;`
+- L3669 `vuint32  locMsgIDMask;`
+- L3683 `CanObjectHandle hwAdjObjHandle;`
+- L3781 `pFlexCANLocal->NBTP.B.NBRP = CanInitObject[initObject].CanInitPrDiv;`
+- ... 생략 77개 (동일 패턴의 생성 심볼)
+
+### 3. 파일 내 함수명
+
+- 함수 선언/정의 후보 수: 281
+
+- L973 `CanConfigSharedRam(vuint8 canCh)` [선언]
+- L974 `CanSetSidFilterClassic(vuint8 canCh, vuint8 index, vuint16 filter, vuint16 mask)` [선언]
+- L975 `CanSetSidFilterSingle(vuint8 canCh, vuint8 index, vuint16 id)` [선언]
+- L976 `CanSetIdFilterSingle(vuint8 canCh, vuint8 index, vuint32 id)` [선언]
+- L1317 `defined(C_ENABLE_RX_QUEUE ) /* CODE CATEGORY 1 START */ static vuint8 CanHL_ReceivedRxHandleQueue(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L1326 `CanHL_ReceivedRxHandle(CAN_CHANNEL_CANTYPE_FIRST tCanRxInfoStruct *pCanRxInfoStruct)` [선언]
+- L1328 `CanHL_ReceivedRxHandle(CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L1333 `CanHL_IndRxHandle(CanReceiveHandle rxHandle)` [선언]
+- L1349 `CanHL_TxConfirmation(CAN_CHANNEL_CANTYPE_FIRST CanObjectHandle txObjHandle)` [선언]
+- L1362 `defined(C_ENABLE_CANCEL_IN_HW )) /* CODE CATEGORY 2 START */ static void CanHl_RestartTxQueue( CAN_CHANNEL_CANTYPE_ONLY)` [선언]
+- L1370 `CanHL_ErrorHandling(CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L1375 `CanSetVariableRxDatalen(CanReceiveHandle rxHandle, vuint8 dataLen)` [선언]
+- L1382 `CanLL_CopyFromCan(CanChipVoidPtr dst, CanChipDataPtr src, vuint8 len)` [선언]
+- L1389 `CanErrata5164WorkaroundBegin(CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L1390 `CanErrata5164WorkaroundEnd(CAN_HW_CHANNEL_CANTYPE_FIRST vuint16 canMcrReg)` [선언]
+- L1397 `CanLL_WakeUpHandling(CAN_HW_CHANNEL_CANTYPE_ONLY)` [선언]
+- L1403 `CanLL_IsMailboxCorrupt(CAN_HW_CHANNEL_CANTYPE_FIRST CanObjectHandle hwObjHandle)` [선언]
+- L1456 `CanLL_CanInterruptDisable(CanChannelHandle locCanHwChannel, tCanIntOldPtr localInterruptOldFlagPtr)` [선언]
+- L1457 `CanLL_CanInterruptRestore(CanChannelHandle locCanHwChannel, tCanIntOld localInterruptOldFlag)` [선언]
+- L1662 `pFlexCAN(x)` [선언]
+- L1671 `CanLL_CanInterruptDisable(CanChannelHandle locCanHwChannel, tCanIntOldPtr localInterruptOldFlagPtr)` [정의]
+- L1673 `pFlexCAN(locCanHwChannel)` [선언]
+- L1720 `pFlexCAN(x)` [선언]
+- L1729 `CanLL_CanInterruptRestore(CanChannelHandle locCanHwChannel, tCanIntOld localInterruptOldFlag)` [정의]
+- L1731 `pFlexCAN(locCanHwChannel)` [선언]
+- L1778 `CanErrata5164WorkaroundBegin(CAN_HW_CHANNEL_CANTYPE_ONLY)` [정의]
+- L1794 `APPLCANTIMERLOOP(kCanLoopSetDisable)` [선언]
+- L1809 `APPLCANTIMERLOOP(kCanLoopSetFreeze)` [선언]
+- L1831 `CanErrata5164WorkaroundEnd(CAN_HW_CHANNEL_CANTYPE_FIRST vuint16 canMcrReg)` [정의]
+- L1868 `CanWakeUpTask() and WakeUp-ISR | PRECONDITIONS: none | | INPUT PARAMETERS: CanChannelHandle channel | current CAN channel | and parameters which are defined in CanLL_WakeUpTaskLocalParameter | | RETURN VALUES: - | | DESCRIPTION: perform wakeup handling. | | ATTENTION: CanLL_WakeUpHandling has to contain: | ApplCanPreWakeUp(CAN_CHANNEL_CANPARA_ONLY)` [선언]
+- L1880 `CanWakeUp(CAN_CHANNEL_CANPARA_ONLY)` [선언]
+- L1881 `APPL_CAN_WAKEUP(channel)` [선언]
+- L1886 `CanLL_WakeUpHandling(CAN_HW_CHANNEL_CANTYPE_ONLY)` [정의]
+- L1888 `pFlexCAN(canHwChannel)` [선언]
+- L1912 `CanCheckMemory() | PRECONDITIONS: none | | INPUT PARAMETERS: CanChannelHandle channel | current CAN channel | CanObjectHandle hwObjHandle | Handle to hardware object | | RETURN VALUES: kCanTrue: Mailbox is corrupt | kCanFalse: Mailbox is not corrupt | | DESCRIPTION: check the current mailbox at index hwObjHandle ****************************************************************************/ /* CODE CATEGORY 4 START */ V_DEF_FUNC_API(STATIC, vuint8, CODE) CanLL_IsMailboxCorrupt(CAN_HW_CHANNEL_CANTYPE_FIRST CanObjectHandle hwObjHandle)` [정의]
+- L1933 `pFlexCAN(canHwChannel)` [선언]
+- L2034 `pFlexCAN(canHwChannel)` [선언]
+- L2083 `CAN_HW_RX_BASIC_STARTINDEX(canHwChannel)` [선언]
+- L2108 `CAN_HW_RX_BASIC_STARTINDEX(canHwChannel)` [선언]
+- L2284 `CanBusOffInterrupt(CAN_HW_CHANNEL_CANTYPE_ONLY)` [정의]
+- L2303 `CanWakeUpInterrupt(CAN_HW_CHANNEL_CANTYPE_ONLY)` [정의]
+- L2324 `CanMB0To31Interrupt(CAN_HW_CHANNEL_CANTYPE_ONLY)` [정의]
+- L2347 `pMCAN(canHwChannel)` [선언]
+- L2381 `CAN_HL_RX_STARTINDEX(canHwChannel))` [선언]
+- L2409 `CAN_HL_RX_STARTINDEX(canHwChannel)` [선언]
+- L2417 `CanHL_IndRxHandle(rxHandle)` [선언]
+- L3693 `CAN_HL_INIT_OBJ_STARTINDEX(channel)` [선언]
+- L3701 `CAN_HL_INIT_OBJ_STOPINDEX(channel), channel, kErrorInitObjectHdlTooLarge)` [선언]
+- L3709 `pMCAN(canHwChannel)` [선언]
+- L3716 `pRXFIFO(canHwChannel)` [선언]
+- L3795 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel) == CAN_HL_LOG_HW_TX_STOPINDEX(canHwChannel), channel, kErrorHwToLogTxObjCalculation)` [선언]
+- L3797 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel) == CAN_HL_LOG_HW_TX_STARTINDEX(canHwChannel), channel, kErrorHwToLogTxObjCalculation)` [선언]
+- L3799 `CAN_HL_LOG_HW_TX_STARTINDEX(canHwChannel) <= CAN_HL_LOG_HW_TX_STOPINDEX(canHwChannel), channel, kErrorHwToLogTxObjCalculation)` [선언]
+- L3804 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L3851 `CanBitMask(hwObjHandle)` [선언]
+- L3855 `CanBitMask(hwObjHandle)` [선언]
+- L3856 `CanBitMask(hwObjHandle)` [선언]
+- L3859 `CanBitMask(hwObjHandle)` [선언]
+- L3862 `CanBitMask(hwObjHandle)` [선언]
+- L3863 `CanBitMask(hwObjHandle)` [선언]
+- L3873 `CanBitMask(hwObjHandle)` [선언]
+- L3877 `CanBitMask(hwObjHandle)` [선언]
+- L3878 `CanBitMask(hwObjHandle)` [선언]
+- L3881 `CanBitMask(hwObjHandle)` [선언]
+- L3884 `CanBitMask(hwObjHandle)` [선언]
+- L3885 `CanBitMask(hwObjHandle)` [선언]
+- L3901 `CanGetTxId0(txHandle)` [선언]
+- L3917 `CAN_HL_RX_STARTINDEX(canHwChannel)` [선언]
+- L3918 `CanGetRxId0(hwObjHandle))` [선언]
+- L3923 `CanGetRxId0(hwObjHandle))` [선언]
+- L3931 `CANRANGE0ACCCODE(canHwChannel).Id0, CANRANGE0ACCMASK(canHwChannel).Id0^0x7FF)` [선언]
+- L3933 `CANRANGE0ACCCODE(canHwChannel), CANRANGE0ACCMASK(canHwChannel)^0x7FF)` [선언]
+- L3979 `CanBitMask(hwAdjObjHandle)` [선언]
+- L3983 `CanBitMask(hwAdjObjHandle)` [선언]
+- L3984 `CanBitMask(hwAdjObjHandle)` [선언]
+- L3987 `CanBitMask(hwAdjObjHandle)` [선언]
+- L3990 `CanBitMask(hwAdjObjHandle)` [선언]
+- L3991 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4001 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4005 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4006 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4009 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4012 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4013 `CanBitMask(hwAdjObjHandle)` [선언]
+- L4018 `CanGetRxId0(rxHandle))` [선언]
+- L4064 `CAN_HL_LOG_HW_TX_STARTINDEX(canHwChannel), CAN_HL_LOG_HW_TX_STOPINDEX(canHwChannel))` [선언]
+- L4097 `CanInitPowerOn(void)` [정의]
+- L4118 `CanGetTxDlc(txHandle)` [선언]
+- L4134 `CanGetRxDataLen(rxHandle)` [선언]
+- L4281 `CAN_HL_TXQUEUE_PADBITS(channel))` [선언]
+- L4314 `CanCancelTransmit(CanTransmitHandle txHandle)` [정의]
+- L4333 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L4352 `CAN_HL_TXQUEUE_PADBITS(channel)` [선언]
+- L4367 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L4369 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L4378 `CanGetTxHwObj(txHandle)` [선언]
+- L4380 `CAN_HL_HW_TX_NORMAL_INDEX(canHwChannel)` [선언]
+- L4419 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L4428 `CAN_HL_HW_MSG_TRANSMIT_INDEX(canHwChannel)` [선언]
+- L4457 `MK_TX_DLC(dlc)` [선언]
+- L4507 `CanGetTxHwObj(txHandle)` [선언]
+- L4510 `CAN_HW_TX_NORMAL_INDEX(CanGetChannelOfTxObj(txHandle))` [선언]
+- L4512 `CAN_HW_TX_NORMAL_INDEX(canHwChannel)` [선언]
+- L4523 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L4560 `CAN_CAN_INTERRUPT_DISABLE(channel)` [선언]
+- L4576 `CanGetConfirmationMask(txHandle)` [선언]
+- L4595 `CAN_CAN_INTERRUPT_RESTORE(channel)` [선언]
+- L4612 `defined(C_ENABLE_TX_FULLCAN_OBJECTS ) ||\ defined( C_ENABLE_INDIVIDUAL_POLLING ) # if defined( C_ENABLE_TX_FULLCAN_OBJECTS ) txObjHandle = CanGetTxHwObj(txHandle)` [선언]
+- L4619 `CAN_HL_HW_TX_NORMAL_INDEX(canHwChannel)` [선언]
+- L4622 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L4664 `CAN_HL_TXQUEUE_PADBITS(channel)` [선언]
+- L4703 `CanCopyDataAndStartTransmission(CAN_CHANNEL_CANPARA_FIRST txObjHandle, txHandle)` [선언]
+- L4777 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L4786 `CAN_HL_HW_TX_STOPINDEX(canHwChannel), channel, kErrorTxObjHandleWrong)` [선언]
+- L4787 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L4793 `pFLEXCAN(canHwChannel)` [선언]
+- L4795 `pMCAN(canHwChannel)` [선언]
+- L4799 `CAN_START_INDEX_TX_OBJ(canHwChannel)` [선언]
+- L5093 `CanGetTxDataPtr(txHandle)` [선언]
+- L5118 `AuxSwitchEndianness((uint32_t*)&CanMemCopySrcPtr[0])` [선언]
+- L5119 `AuxSwitchEndianness((uint32_t*)&CanMemCopySrcPtr[4])` [선언]
+- L5186 `defined(C_ENABLE_RX_BASICCAN_POLLING ) || \ defined( C_ENABLE_ERROR_POLLING ) || \ defined( C_ENABLE_WAKEUP_POLLING ) || \ (defined( C_HL_ENABLE_CANCEL_IN_HW_TASK ) && defined( C_ENABLE_CANCEL_IN_HW )) /* ************************************************************************** | NAME: CanTask | CALLED BY: application | PRECONDITIONS: | INPUT PARAMETERS: none | RETURN VALUES: none | DESCRIPTION: - cyclic Task, | - polling error bus off | - polling Tx objects | - polling Rx objects ************************************************************************** */ /* CODE CATEGORY 2 START */ C_API_1 void C_API_2 CanTask(void)` [정의]
+- L5223 `defined(C_ENABLE_CANCEL_IN_HW )) CanTxTask(CAN_CHANNEL_CANPARA_ONLY)` [선언]
+- L5228 `CanRxFullCANTask(CAN_CHANNEL_CANPARA_ONLY)` [선언]
+- L5233 `CanRxBasicCANTask(CAN_CHANNEL_CANPARA_ONLY)` [선언]
+- L5253 `CanErrorTask(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L5294 `CanWakeUpTask(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L5338 `pFlexCAN(canHwChannel)` [선언]
+- L5463 `CanBitMask(txObjHandle)` [선언]
+- L5468 `CanBitMask(txObjHandle)` [선언]
+- L5494 `defined(C_ENABLE_CANCEL_IN_HW )) /* ************************************************************************** | NAME: CanHl_RestartTxQueue | CALLED BY: CanTxTask, via CanLL (TxMsgDestroyed) | PRECONDITIONS: | INPUT PARAMETERS: none | RETURN VALUES: none | DESCRIPTION: start transmission if queue entry exists and HW is free ************************************************************************** */ /* CODE CATEGORY 2 START */ static void CanHl_RestartTxQueue( CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L5586 `CAN_HL_TXQUEUE_PADBITS(channel))` [선언]
+- L5599 `CanCopyDataAndStartTransmission(CAN_CHANNEL_CANPARA_FIRST CAN_HL_HW_TX_NORMAL_INDEX(canHwChannel), txHandle)` [선언]
+- L5605 `CAN_HL_HW_TX_NORMAL_INDEX(canHwChannel), txHandle)` [선언]
+- L5637 `pFlexCAN(canHwChannel)` [선언]
+- L5766 `pFlexCAN(canHwChannel)` [선언]
+- L5803 `CAN_HW_RX_BASIC_STARTINDEX(canHwChannel)` [선언]
+- L5831 `CAN_HW_RX_BASIC_STARTINDEX(canHwChannel)` [선언]
+- L5895 `CanISR(), CanErrorTask() | PRECONDITIONS: | INPUT PARAMETERS: none | RETURN VALUES: none | DESCRIPTION: - error interrupt (busoff, error warning, ...) ************************************************************************** */ /* CODE CATEGORY 2 START */ static void CanHL_ErrorHandling( CAN_HW_CHANNEL_CANTYPE_ONLY)` [정의]
+- L5904 `pMCAN(canHwChannel)` [선언]
+- L5913 `CANSFR_CAST(kMCAN_BOFF_INT | kMCAN_ERR_INT)` [선언]
+- L5916 `CANSFR_CAST(kMCAN_BOFF_INT | kMCAN_ERR_INT)` [선언]
+- L5944 `pFlexCAN(canHwChannel)` [선언]
+- L5950 `CAN_HL_HW_TX_STOPINDEX(canHwChannel), channel, kErrorHwHdlTooLarge)` [선언]
+- L6013 `pFlexCAN(canHwChannel)` [선언]
+- L6019 `CAN_HL_HW_RX_FULL_STOPINDEX(canHwChannel), channel, kErrorHwHdlTooLarge)` [선언]
+- L6082 `pFlexCAN(canHwChannel)` [선언]
+- L6088 `CAN_HL_HW_RX_BASIC_STOPINDEX(canHwChannel), channel, kErrorHwHdlTooLarge)` [선언]
+- L6196 `CanHL_ReceivedRxHandle(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6238 `CAN_HL_P_RX_INFO_STRUCT(channel))` [선언]
+- L6245 `CanRxActualDLC(CAN_HL_P_RX_INFO_STRUCT(channel)))` [선언]
+- L6262 `CAN_HL_P_RX_INFO_STRUCT_HANDLE(channel)` [선언]
+- L6285 `CanRxActualDLC(CAN_HL_P_RX_INFO_STRUCT(channel)))` [선언]
+- L6287 `CanRxActualDLC(CAN_HL_P_RX_INFO_STRUCT(channel)))` [선언]
+- L6294 `CanGetRxDataLen(CAN_HL_P_RX_INFO_STRUCT_HANDLE(channel)))` [선언]
+- L6296 `CanGetRxDataLen(CAN_HL_P_RX_INFO_STRUCT_HANDLE(channel)))` [선언]
+- L6307 `CanReceivceRxHandle() */ /* CODE CATEGORY 1 END */ # if defined( C_ENABLE_INDICATION_FLAG ) || \ defined( C_ENABLE_INDICATION_FCT ) /* ************************************************************************** | NAME: CanHL_IndRxHandle | CALLED BY: CanBasicCanMsgReceived, CanFullCanMsgReceived | PRECONDITIONS: | INPUT PARAMETERS: Handle of received Message to access generated data | RETURN VALUES: none | DESCRIPTION: DLC-check, Precopy and copy of Data for received message ************************************************************************** */ /* CODE CATEGORY 1 START */ static void CanHL_IndRxHandle( CanReceiveHandle rxHandle)` [정의]
+- L6333 `CanGetIndicationMask(rxHandle)` [선언]
+- L6357 `CanISR() | PRECONDITIONS: | INPUT PARAMETERS: - internal can chip number | - interrupt ID | RETURN VALUES: none | DESCRIPTION: - full can transmit ************************************************************************** */ /* PRQA S 2001 End_CanHL_TxConfirmation */ /* suppress misra message about usage of goto */ /* CODE CATEGORY 1 START */ static void CanHL_TxConfirmation( CAN_HW_CHANNEL_CANTYPE_FIRST CanObjectHandle txObjHandle)` [정의]
+- L6400 `CAN_START_INDEX_TX_OBJ(canHwChannel)` [선언]
+- L6469 `CanGetConfirmationMask(txHandle)` [선언]
+- L6561 `CAN_HL_TXQUEUE_PADBITS(channel))` [선언]
+- L6574 `CanCopyDataAndStartTransmission(CAN_CHANNEL_CANPARA_FIRST txObjHandle, txHandle)` [선언]
+- L6628 `CanSetActive(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6647 `CanSetPassive(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6676 `CanOnline(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6742 `CanSetPartOffline(CAN_CHANNEL_CANTYPE_FIRST vuint8 sendGroup)` [정의]
+- L6766 `CanSetPartOnline(CAN_CHANNEL_CANTYPE_FIRST vuint8 invSendGroup)` [정의]
+- L6790 `CanGetPartMode(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6872 `CanSleep(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6896 `pMCAN(canHwChannel)` [선언]
+- L6902 `Appl_CanSleep(CAN_CHANNEL_CANPARA_ONLY)` [선언]
+- L6919 `APPLCANTIMERLOOP(kCanLoopEnterDisableMode)` [선언]
+- L6957 `CanWakeUp(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L6970 `pMCAN(canHwChannel)` [선언]
+- L6983 `APPLCANTIMERLOOP(kCanLoopEnterNormalMode)` [선언]
+- L7021 `CanStop(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L7042 `pMCAN(canHwChannel)` [선언]
+- L7047 `APPLCANTIMERLOOP(kCanLoopEnterFreezeMode)` [선언]
+- L7084 `CanStart(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L7099 `pMCAN(canHwChannel)` [선언]
+- L7108 `APPLCANTIMERLOOP(kCanLoopEnterNormalMode)` [선언]
+- L7313 `CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel))` [선언]
+- L7330 `CAN_HL_HW_MSG_TRANSMIT_INDEX(canHwChannel)` [선언]
+- L7331 `CanLL_TxIsHWObjFree(canHwChannel, txObjHandle ), channel, kErrorTxBufferBusy)` [선언]
+- L7334 `pFLEXCAN(canHwChannel)` [선언]
+- L7336 `pFlexCAN(canHwChannel)` [선언]
+- L7442 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L7445 `CAN_HL_TX_DYN_ROM_STOPINDEX(channel)), channel, kErrorAccessedInvalidDynObj)` [선언]
+- L7447 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)), channel, kErrorAccessedStatObjAsDyn)` [선언]
+- L7450 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L7507 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L7510 `CAN_HL_TX_DYN_ROM_STOPINDEX(channel)), channel, kErrorAccessedInvalidDynObj)` [선언]
+- L7512 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)), channel, kErrorAccessedStatObjAsDyn)` [선언]
+- L7515 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L7530 `CAN_HL_TXQUEUE_PADBITS(channel)` [선언]
+- L7584 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L7587 `CAN_HL_TX_DYN_ROM_STOPINDEX(channel)), channel, kErrorAccessedInvalidDynObj)` [선언]
+- L7589 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)), channel, kErrorAccessedStatObjAsDyn)` [선언]
+- L7593 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L7599 `MK_STDID0(id)` [선언]
+- L7601 `MK_STDID1(id)` [선언]
+- L7604 `MK_STDID2(id)` [선언]
+- L7607 `MK_STDID3(id)` [선언]
+- L7610 `MK_STDID4(id)` [선언]
+- L7638 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L7641 `CAN_HL_TX_DYN_ROM_STOPINDEX(channel)), channel, kErrorAccessedInvalidDynObj)` [선언]
+- L7643 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)), channel, kErrorAccessedStatObjAsDyn)` [선언]
+- L7647 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L7653 `MK_EXTID0(((vuint32)idExtHi<<16) | (vuint32)idExtLo)` [선언]
+- L7655 `MK_EXTID1(((vuint32)idExtHi<<16) | (vuint32)idExtLo)` [선언]
+- L7658 `MK_EXTID2(((vuint32)idExtHi<<16) | (vuint32)idExtLo)` [선언]
+- L7661 `MK_EXTID3(((vuint32)idExtHi<<16) | (vuint32)idExtLo)` [선언]
+- L7664 `MK_EXTID4(((vuint32)idExtHi<<16) | (vuint32)idExtLo)` [선언]
+- L7691 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L7694 `CAN_HL_TX_DYN_ROM_STOPINDEX(channel)), channel, kErrorAccessedInvalidDynObj)` [선언]
+- L7696 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)), channel, kErrorAccessedStatObjAsDyn)` [선언]
+- L7700 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L7703 `MK_TX_DLC_EXT(dlc)` [선언]
+- L7705 `MK_TX_DLC(dlc)` [선언]
+- L7736 `CanGetChannelOfTxObj(txHandle)` [선언]
+- L7739 `CAN_HL_TX_DYN_ROM_STOPINDEX(channel)), channel, kErrorAccessedInvalidDynObj)` [선언]
+- L7741 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)), channel, kErrorAccessedStatObjAsDyn)` [선언]
+- L7744 `CAN_HL_TX_DYN_ROM_STARTINDEX(channel)) + CAN_HL_TX_DYN_RAM_STARTINDEX(channel)` [선언]
+- L7765 `CanSetTxIdExtHi(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [정의]
+- L7772 `MK_EXTID0(0x00FFFFFFUL)) | MK_EXTID0((vuint32)mask<<24)` [선언]
+- L7774 `MK_EXTID1(0x00FFFFFFUL)) | MK_EXTID1((vuint32)mask<<24)` [선언]
+- L7777 `MK_EXTID2(0x00FFFFFFUL)) | MK_EXTID2((vuint32)mask<<24)` [선언]
+- L7780 `MK_EXTID3(0x00FFFFFFUL)) | MK_EXTID3((vuint32)mask<<24)` [선언]
+- L7783 `MK_EXTID4(0x00FFFFFFUL)) | MK_EXTID4((vuint32)mask<<24)` [선언]
+- L7798 `CanSetTxIdExtMidHi(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [정의]
+- L7804 `MK_EXTID0(0xFF00FFFFUL)) | MK_EXTID0((vuint32)mask<<16)` [선언]
+- L7806 `MK_EXTID1(0xFF00FFFFUL)) | MK_EXTID1((vuint32)mask<<16)` [선언]
+- L7809 `MK_EXTID2(0xFF00FFFFUL)) | MK_EXTID2((vuint32)mask<<16)` [선언]
+- L7812 `MK_EXTID3(0xFF00FFFFUL)) | MK_EXTID3((vuint32)mask<<16)` [선언]
+- L7815 `MK_EXTID4(0xFF00FFFFUL)) | MK_EXTID4((vuint32)mask<<16)` [선언]
+- L7830 `CanSetTxIdExtMidLo(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [정의]
+- L7836 `MK_EXTID0(0xFFFF00FFUL)) | MK_EXTID0((vuint32)mask<<8)` [선언]
+- L7838 `MK_EXTID1(0xFFFF00FFUL)) | MK_EXTID1((vuint32)mask<<8)` [선언]
+- L7841 `MK_EXTID2(0xFFFF00FFUL)) | MK_EXTID2((vuint32)mask<<8)` [선언]
+- L7844 `MK_EXTID3(0xFFFF00FFUL)) | MK_EXTID3((vuint32)mask<<8)` [선언]
+- L7847 `MK_EXTID4(0xFFFF00FFUL)) | MK_EXTID4((vuint32)mask<<8)` [선언]
+- L7862 `CanSetTxIdExtLo(CAN_CHANNEL_CANTYPE_FIRST vuint8 mask)` [정의]
+- L7868 `MK_EXTID0(0xFFFFFF00UL)) | MK_EXTID0((vuint32)mask)` [선언]
+- L7870 `MK_EXTID1(0xFFFFFF00UL)) | MK_EXTID1((vuint32)mask)` [선언]
+- L7873 `MK_EXTID2(0xFFFFFF00UL)) | MK_EXTID2((vuint32)mask)` [선언]
+- L7876 `MK_EXTID3(0xFFFFFF00UL)) | MK_EXTID3((vuint32)mask)` [선언]
+- L7879 `MK_EXTID4(0xFFFFFF00UL)) | MK_EXTID4((vuint32)mask)` [선언]
+- L7922 `CanSetVariableRxDatalen(CanReceiveHandle rxHandle, vuint8 dataLen)` [정의]
+- L7933 `CanGetRxDataLen(rxHandle)` [선언]
+- L7950 `CanSetMsgReceivedCondition(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L7970 `CanResetMsgReceivedCondition(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L7995 `CanGetMsgReceivedCondition(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L8016 `ApplCanChannelDummy(CanChannelHandle channel)` [정의]
+- L8027 `ApplCanRxStructPtrDummy(CanRxInfoStructPtr rxStruct)` [정의]
+- L8053 `ApplCanTxHandleDummy(CanTransmitHandle txHandle)` [정의]
+- L8071 `ApplCanTxStructDummy(CanTxInfoStruct txStruct)` [정의]
+- L8088 `ApplCanRxHandleDummy(CanReceiveHandle rxHandle)` [정의]
+- L8108 `CanHL_ReceivedRxHandleQueue(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L8181 `CanHandleRxMsg(void)` [정의]
+- L8227 `CanHL_ReceivedRxHandle(CAN_CHANNEL_CANPARA_FIRST &localCanRxInfoStruct)` [선언]
+- L8239 `CanHL_ReceivedRxHandle(CAN_CHANNEL_CANPARA_FIRST &localCanRxInfoStruct)` [선언]
+- L8258 `CanHandleRxMsg() */ /* CODE CATEGORY 2 END */ /* ********************************************************************** * NAME: CanDeleteRxQueue * CALLED BY: Application, CAN driver * Preconditions: none * PARAMETER: none * RETURN VALUE: none * DESCRIPTION: delete receive queue *********************************************************************** */ /* CODE CATEGORY 4 START */ C_API_1 void C_API_2 CanDeleteRxQueue(void)` [정의]
+- L8279 `CanDeleteRxQueue() */ /* CODE CATEGORY 4 END */ #endif /* C_ENABLE_RX_QUEUE */ #if defined(C_ENABLE_BASE_ADDRESS_UPDATE) /* ********************************************************************** * NAME: CanBaseAddressRequest * CALLED BY: Application * Preconditions: none * PARAMETER: channel: the CAN channel for which the address is requested * RETURN VALUE: --- * DESCRIPTION: The application calls this function in order to tell the * CAN driver to request the computation of the virtual * address of the CAN controller. *********************************************************************** */ /* CODE CATEGORY 4 START */ C_API_1 void C_API_2 CanBaseAddressRequest(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L8319 `CanBaseAddressActivate(CAN_CHANNEL_CANTYPE_ONLY)` [정의]
+- L8331 `CanConfigSharedRam(vuint8 canCh)` [정의]
+- L8339 `SUB0_ADDR_OFFSET(bufInfo->sidFilter.memAddr)` [선언]
+- L8343 `SUB0_ADDR_OFFSET(bufInfo->xidFilter.memAddr)` [선언]
+- L8347 `SUB0_ADDR_OFFSET(bufInfo->rxFifo0.memAddr)` [선언]
+- L8354 `SUB0_ADDR_OFFSET(bufInfo->rxFifo1.memAddr)` [선언]
+- L8361 `SUB0_ADDR_OFFSET(bufInfo->rxBuffer.memAddr)` [선언]
+- L8365 `SUB0_ADDR_OFFSET(bufInfo->txBuf.memAddr)` [선언]
+- L8375 `SUB1_ADDR_OFFSET(bufInfo->sidFilter.memAddr)` [선언]
+- L8379 `SUB1_ADDR_OFFSET(bufInfo->xidFilter.memAddr)` [선언]
+- L8383 `SUB1_ADDR_OFFSET(bufInfo->rxFifo0.memAddr)` [선언]
+- L8390 `SUB1_ADDR_OFFSET(bufInfo->rxFifo1.memAddr)` [선언]
+- L8397 `SUB1_ADDR_OFFSET(bufInfo->rxBuffer.memAddr)` [선언]
+- L8401 `SUB1_ADDR_OFFSET(bufInfo->txBuf.memAddr)` [선언]
+- L8421 `CanSetSidFilterClassic(vuint8 canCh, vuint8 index, vuint16 filter, vuint16 mask)` [정의]
+- L8436 `CanSetSidFilterSingle(vuint8 canCh, vuint8 index, vuint16 id)` [정의]
+- L8452 `CanSetIdFilterSingle(vuint8 canCh, vuint8 index, vuint32 id)` [정의]
+
+### 4. 각 함수별 역할 설명
+
+- `CanConfigSharedRam` (L973, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetSidFilterClassic` (L974, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetSidFilterSingle` (L975, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetIdFilterSingle` (L976, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `defined` (L1317, 선언): **********************************************************************
+- `CanHL_ReceivedRxHandle` (L1326, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_ReceivedRxHandle` (L1328, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_IndRxHandle` (L1333, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_TxConfirmation` (L1349, 선언): 송신 완료 통지나 확인 상태를 처리하고 상위 계층 콜백/플래그를 갱신한다.
+- `defined` (L1362, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanHL_ErrorHandling` (L1370, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetVariableRxDatalen` (L1375, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanLL_CopyFromCan` (L1382, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanErrata5164WorkaroundBegin` (L1389, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanErrata5164WorkaroundEnd` (L1390, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanLL_WakeUpHandling` (L1397, 선언): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `CanLL_IsMailboxCorrupt` (L1403, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanLL_CanInterruptDisable` (L1456, 선언): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `CanLL_CanInterruptRestore` (L1457, 선언): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `pFlexCAN` (L1662, 선언): NAME:               CanLL_CanInterruptDisable CALLED BY:          CAN driver PRECONDITIONS: PARAMETER:          ptr to storage variable for channel's IMASK register and a handle to a channel RETURN VALUE:       none DESCRIPTION:        Disable the CAN interrup
+- `CanLL_CanInterruptDisable` (L1671, 정의): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `pFlexCAN` (L1673, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pFlexCAN` (L1720, 선언): NAME:               CanLL_CanInterruptRestore CALLED BY:          CAN driver PRECONDITIONS:      A call to CanLL_CanInterruptDisable had to occur before a call to this function. PARAMETER:          variable holding saved IMASK register for the channel and a ha
+- `CanLL_CanInterruptRestore` (L1729, 정의): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `pFlexCAN` (L1731, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanErrata5164WorkaroundBegin` (L1778, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPLCANTIMERLOOP` (L1794, 선언): wait until FlexCAN A is disabled
+- `APPLCANTIMERLOOP` (L1809, 선언): wait until FlexCAN A is in FREEZE mode
+- `CanErrata5164WorkaroundEnd` (L1831, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanWakeUpTask` (L1868, 선언): C_ENABLE_INDIVIDUAL_BUFFER_MASKING
+- `CanWakeUp` (L1880, 선언): C_ENABLE_INDIVIDUAL_BUFFER_MASKING
+- `APPL_CAN_WAKEUP` (L1881, 선언): C_ENABLE_INDIVIDUAL_BUFFER_MASKING
+- `CanLL_WakeUpHandling` (L1886, 정의): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `pFlexCAN` (L1888, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanCheckMemory` (L1912, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pFlexCAN` (L1933, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pFlexCAN` (L2034, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HW_RX_BASIC_STARTINDEX` (L2083, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HW_RX_BASIC_STARTINDEX` (L2108, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanBusOffInterrupt` (L2284, 정의): CAN 버스오프 감지, 복구 타이밍, 통신 중단/재시작 상태를 처리한다.
+- `CanWakeUpInterrupt` (L2303, 정의): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `CanMB0To31Interrupt` (L2324, 정의): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `pMCAN` (L2347, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_RX_STARTINDEX` (L2381, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HL_RX_STARTINDEX` (L2409, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_IndRxHandle` (L2417, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HL_INIT_OBJ_STARTINDEX` (L3693, 선언): Msg(4:3759) Implicit conversion: int to unsigned short. MISRA Rule 43 - no change in RI 1.4
+- `CAN_HL_INIT_OBJ_STOPINDEX` (L3701, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pMCAN` (L3709, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pRXFIFO` (L3716, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L3795, 선언): in case of CommonCAN, transmission is always on the frist HW channel of a CommonCAN channel
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L3797, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_LOG_HW_TX_STARTINDEX` (L3799, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L3804, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3851, 선언): calculate polling bit mask for this hardware object
+- `CanBitMask` (L3855, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3856, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3859, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3862, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3863, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3873, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3877, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3878, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3881, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3884, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3885, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetTxId0` (L3901, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_RX_STARTINDEX` (L3917, 선언): brackets to avoid lint info 834
+- `CanGetRxId0` (L3918, 선언): brackets to avoid lint info 834
+- `CanGetRxId0` (L3923, 선언): brackets to avoid lint info 834
+- `CANRANGE0ACCCODE` (L3931, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CANRANGE0ACCCODE` (L3933, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3979, 선언): calculate polling bit mask for this hardware object
+- `CanBitMask` (L3983, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3984, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3987, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3990, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L3991, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L4001, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L4005, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L4006, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L4009, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L4012, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L4013, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetRxId0` (L4018, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HL_LOG_HW_TX_STARTINDEX` (L4064, 선언): end of loop over all hw channels
+- `CanInitPowerOn` (L4097, 정의): 전원 인가 직후 한 번 수행되는 모듈 전역 초기화를 담당한다.
+- `CanGetTxDlc` (L4118, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetRxDataLen` (L4134, 선언): Initialize the array with received dlc --------------------------
+- `CAN_HL_TXQUEUE_PADBITS` (L4281, 선언): iterate through all flags and notify application for every scheduled transmission
+- `CanCancelTransmit` (L4314, 정의): ************************************************************************* NAME:             CanCancelTransmit CALLED BY:        Application PRECONDITIONS:    none INPUT PARAMETERS: Tx-Msg-Handle RETURN VALUES:    none DESCRIPTION:      delete on Msg-Object ***
+- `CanGetChannelOfTxObj` (L4333, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TXQUEUE_PADBITS` (L4352, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L4367, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L4369, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetTxHwObj` (L4378, 선언): ##RI1.4 - 1.6: CanCancelTransmit and CanCancelMsgTransmit
+- `CAN_HL_HW_TX_NORMAL_INDEX` (L4380, 선언): ##RI1.4 - 1.6: CanCancelTransmit and CanCancelMsgTransmit
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L4419, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_HW_MSG_TRANSMIT_INDEX` (L4428, 선언): ##RI1.4 - 1.6: CanCancelTransmit and CanCancelMsgTransmit
+- `MK_TX_DLC` (L4457, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetTxHwObj` (L4507, 선언): txObjHandle allways required when passive mode is used
+- `CAN_HW_TX_NORMAL_INDEX` (L4510, 선언): txObjHandle allways required when passive mode is used
+- `CAN_HW_TX_NORMAL_INDEX` (L4512, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetChannelOfTxObj` (L4523, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_CAN_INTERRUPT_DISABLE` (L4560, 선언): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `CanGetConfirmationMask` (L4576, 선언): 송신 완료 통지나 확인 상태를 처리하고 상위 계층 콜백/플래그를 갱신한다.
+- `CAN_CAN_INTERRUPT_RESTORE` (L4595, 선언): 전역 또는 CAN 관련 인터럽트 비활성화/복구 보호 구간을 제공한다.
+- `defined` (L4612, 선언): -----------------------------------------------------------------------
+- `CAN_HL_HW_TX_NORMAL_INDEX` (L4619, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L4622, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TXQUEUE_PADBITS` (L4664, 선언): tx object 0 used -> set msg in queue: -----------------------------
+- `CanCopyDataAndStartTransmission` (L4703, 선언): Save hdl of msgObj to be transmitted
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L4777, 선언): dynamic and static messages are in the system
+- `CAN_HL_HW_TX_STOPINDEX` (L4786, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L4787, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pFLEXCAN` (L4793, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pMCAN` (L4795, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_START_INDEX_TX_OBJ` (L4799, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetTxDataPtr` (L5093, 선언): copy data ---------------------------------------------------------------
+- `AuxSwitchEndianness` (L5118, 선언): copy data into tx message object
+- `AuxSwitchEndianness` (L5119, 선언): copy data into tx message object
+- `defined` (L5186, 정의): if defined( C_ENABLE_CAN_TRANSMIT )
+- `defined` (L5223, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanRxFullCANTask` (L5228, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanRxBasicCANTask` (L5233, 선언): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanErrorTask` (L5253, 정의): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `CanWakeUpTask` (L5294, 정의): 주기적으로 호출되어 타이머, 상태 머신, 송수신 대기 작업을 진행한다.
+- `pFlexCAN` (L5338, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanBitMask` (L5463, 선언): 3) canHandleCurTxObj[(vsintx)txObjHandle+CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel)] must be kCanBufferCancel
+- `CanBitMask` (L5468, 선언): 3) canHandleCurTxObj[(vsintx)txObjHandle+CAN_HL_TX_OFFSET_HW_TO_LOG(canHwChannel)] must be kCanBufferCancel
+- `defined` (L5494, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TXQUEUE_PADBITS` (L5586, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanCopyDataAndStartTransmission` (L5599, 선언): Save hdl of msgObj to be transmitted
+- `CAN_HL_HW_TX_NORMAL_INDEX` (L5605, 선언): Save hdl of msgObj to be transmitted
+- `pFlexCAN` (L5637, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pFlexCAN` (L5766, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HW_RX_BASIC_STARTINDEX` (L5803, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HW_RX_BASIC_STARTINDEX` (L5831, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanISR` (L5895, 정의): C_ENABLE_RX_BASICCAN_POLLING && C_ENABLE_RX_BASICCAN_OBJECTS
+- `pMCAN` (L5904, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CANSFR_CAST` (L5913, 선언): clear busoff and error interrupt flags
+- `CANSFR_CAST` (L5916, 선언): clear busoff and error interrupt flags
+- `pFlexCAN` (L5944, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_HW_TX_STOPINDEX` (L5950, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pFlexCAN` (L6013, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_HW_RX_FULL_STOPINDEX` (L6019, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `pFlexCAN` (L6082, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_HW_RX_BASIC_STOPINDEX` (L6088, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_ReceivedRxHandle` (L6196, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HL_P_RX_INFO_STRUCT` (L6238, 선언): ##RI1.4 - 2.7: Callbackfunction-DLC-Check
+- `CanRxActualDLC` (L6245, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CAN_HL_P_RX_INFO_STRUCT_HANDLE` (L6262, 선언): canRxHandle in indexed drivers only for consistancy check in higher layer modules
+- `CanRxActualDLC` (L6285, 선언): copy data ---------------------------------------------
+- `CanRxActualDLC` (L6287, 선언): copy data ---------------------------------------------
+- `CanGetRxDataLen` (L6294, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanGetRxDataLen` (L6296, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanReceivceRxHandle` (L6307, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanGetIndicationMask` (L6333, 선언): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanISR` (L6357, 정의): CAN 하드웨어 인터럽트 서비스 루틴으로 이벤트를 드라이버 처리 루틴으로 전달한다.
+- `CAN_START_INDEX_TX_OBJ` (L6400, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetConfirmationMask` (L6469, 선언): 송신 완료 통지나 확인 상태를 처리하고 상위 계층 콜백/플래그를 갱신한다.
+- `CAN_HL_TXQUEUE_PADBITS` (L6561, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanCopyDataAndStartTransmission` (L6574, 선언): Save hdl of msgObj to be transmitted
+- `CanSetActive` (L6628, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetPassive` (L6647, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanOnline` (L6676, 정의): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanSetPartOffline` (L6742, 정의): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanSetPartOnline` (L6766, 정의): 통신 허용/차단, 네트워크 요청/해제 또는 통신 모드 전환을 처리한다.
+- `CanGetPartMode` (L6790, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSleep` (L6872, 정의): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `pMCAN` (L6896, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `Appl_CanSleep` (L6902, 선언): allow FlexCAN to enter DOZE mode
+- `APPLCANTIMERLOOP` (L6919, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanWakeUp` (L6957, 정의): CAN 채널의 슬립/웨이크업 전환과 관련 상태를 처리한다.
+- `pMCAN` (L6970, 선언): pointer to FlexCAN channel object
+- `APPLCANTIMERLOOP` (L6983, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanStop` (L7021, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pMCAN` (L7042, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPLCANTIMERLOOP` (L7047, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanStart` (L7084, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `pMCAN` (L7099, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `APPLCANTIMERLOOP` (L7108, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_OFFSET_HW_TO_LOG` (L7313, 선언): calculate index for canhandleCurTxObj (logical object handle)
+- `CAN_HL_HW_MSG_TRANSMIT_INDEX` (L7330, 선언): Save hdl of msgObj to be transmitted
+- `CanLL_TxIsHWObjFree` (L7331, 선언): Save hdl of msgObj to be transmitted
+- `pFLEXCAN` (L7334, 선언): Save hdl of msgObj to be transmitted
+- `pFlexCAN` (L7336, 선언): Save hdl of msgObj to be transmitted
+- `CanGetChannelOfTxObj` (L7442, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STOPINDEX` (L7445, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7447, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7450, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetChannelOfTxObj` (L7507, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STOPINDEX` (L7510, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7512, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7515, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TXQUEUE_PADBITS` (L7530, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetChannelOfTxObj` (L7584, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STOPINDEX` (L7587, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7589, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7593, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_STDID0` (L7599, 선언): UDS DID/PID 데이터 조회, 지원 여부 확인, 응답 데이터 구성에 관여한다.
+- `MK_STDID1` (L7601, 선언): UDS DID/PID 데이터 조회, 지원 여부 확인, 응답 데이터 구성에 관여한다.
+- `MK_STDID2` (L7604, 선언): UDS DID/PID 데이터 조회, 지원 여부 확인, 응답 데이터 구성에 관여한다.
+- `MK_STDID3` (L7607, 선언): UDS DID/PID 데이터 조회, 지원 여부 확인, 응답 데이터 구성에 관여한다.
+- `MK_STDID4` (L7610, 선언): UDS DID/PID 데이터 조회, 지원 여부 확인, 응답 데이터 구성에 관여한다.
+- `CanGetChannelOfTxObj` (L7638, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STOPINDEX` (L7641, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7643, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7647, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID0` (L7653, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID1` (L7655, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID2` (L7658, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID3` (L7661, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID4` (L7664, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetChannelOfTxObj` (L7691, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STOPINDEX` (L7694, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7696, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7700, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_TX_DLC_EXT` (L7703, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_TX_DLC` (L7705, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanGetChannelOfTxObj` (L7736, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STOPINDEX` (L7739, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7741, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CAN_HL_TX_DYN_ROM_STARTINDEX` (L7744, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtHi` (L7765, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID0` (L7772, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID1` (L7774, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID2` (L7777, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID3` (L7780, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID4` (L7783, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtMidHi` (L7798, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID0` (L7804, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID1` (L7806, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID2` (L7809, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID3` (L7812, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID4` (L7815, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtMidLo` (L7830, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID0` (L7836, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID1` (L7838, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID2` (L7841, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID3` (L7844, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID4` (L7847, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetTxIdExtLo` (L7862, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID0` (L7868, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID1` (L7870, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID2` (L7873, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID3` (L7876, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `MK_EXTID4` (L7879, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetVariableRxDatalen` (L7922, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanGetRxDataLen` (L7933, 선언): assertion for dataLen not necessary due to runtime check
+- `CanSetMsgReceivedCondition` (L7950, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanResetMsgReceivedCondition` (L7970, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanGetMsgReceivedCondition` (L7995, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanChannelDummy` (L8016, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanRxStructPtrDummy` (L8027, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `ApplCanTxHandleDummy` (L8053, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanTxStructDummy` (L8071, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `ApplCanRxHandleDummy` (L8088, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_ReceivedRxHandleQueue` (L8108, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHandleRxMsg` (L8181, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanHL_ReceivedRxHandle` (L8227, 선언): Call the application call-back functions and set flags
+- `CanHL_ReceivedRxHandle` (L8239, 선언): Call the application call-back functions and set flags
+- `CanHandleRxMsg` (L8258, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanDeleteRxQueue` (L8279, 정의): 수신 프레임/메시지를 검사하고 버퍼 복사, 핸들 매핑, 상위 계층 통지를 수행한다.
+- `CanBaseAddressActivate` (L8319, 정의): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanConfigSharedRam` (L8331, 정의): defined(VGEN_ENABLE_MDWRAP) || defined(VGEN_ENABLE_QWRAP) || defined(C_ENABLE_BASE_ADDRESS_UPDATE)
+- `SUB0_ADDR_OFFSET` (L8339, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB0_ADDR_OFFSET` (L8343, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB0_ADDR_OFFSET` (L8347, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB0_ADDR_OFFSET` (L8354, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB0_ADDR_OFFSET` (L8361, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB0_ADDR_OFFSET` (L8365, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB1_ADDR_OFFSET` (L8375, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB1_ADDR_OFFSET` (L8379, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB1_ADDR_OFFSET` (L8383, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB1_ADDR_OFFSET` (L8390, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB1_ADDR_OFFSET` (L8397, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `SUB1_ADDR_OFFSET` (L8401, 선언): 파일 내 이름/위치상 해당 모듈의 내부 보조 처리 또는 생성 파라미터 접근을 담당한다.
+- `CanSetSidFilterClassic` (L8421, 정의): \brief Set Standard ID filter / mask mode \param[in] canCh     CAN channel \param[in] index     Index of Filter \param[in] filter    Filter item \param[in] mask      Mask \param[in] storage \return
+- `CanSetSidFilterSingle` (L8436, 정의): \brief Set Standard ID filter / mask mode \param[in] canCh     CAN channel \param[in] index     Index of Filter \param[in] filter    Filter item \param[in] mask      Mask \param[in] storage \return
+- `CanSetIdFilterSingle` (L8452, 정의): \brief Set Standard ID filter / mask mode \param[in] canCh     CAN channel \param[in] index     Index of Filter \param[in] filter    Filter item \param[in] mask      Mask \param[in] storage \return
+
+### 5. 필요시 코드 부연 설명
+
+대표 함수 원형 수준의 코드 맥락이다. 전체 구현은 원본 파일이 크므로 함수명/역할 중심으로 분석했다.
+
+```c
+// src/CBD/Can/can_drv.c:973
+static void CanConfigSharedRam(vuint8 canCh)
+```
+```c
+// src/CBD/Can/can_drv.c:974
+static void CanSetSidFilterClassic(vuint8 canCh, vuint8 index, vuint16 filter, vuint16 mask)
+```
+```c
+// src/CBD/Can/can_drv.c:975
+static void CanSetSidFilterSingle(vuint8 canCh, vuint8 index, vuint16 id)
+```
+```c
+// src/CBD/Can/can_drv.c:976
+static void CanSetIdFilterSingle(vuint8 canCh, vuint8 index, vuint32 id)
+```
+```c
+// src/CBD/Can/can_drv.c:1317
+defined( C_ENABLE_RX_BASICCAN_OBJECTS ) # if defined(C_ENABLE_RX_QUEUE ) /* CODE CATEGORY 1 START */ static vuint8 CanHL_ReceivedRxHandleQueue(CAN_CHANNEL_CANTYPE_ONLY)
+```
+```c
+// src/CBD/Can/can_drv.c:1326
+static vuint8 CanHL_ReceivedRxHandle(CAN_CHANNEL_CANTYPE_FIRST tCanRxInfoStruct *pCanRxInfoStruct)
+```
+```c
+// src/CBD/Can/can_drv.c:1328
+static vuint8 CanHL_ReceivedRxHandle(CAN_CHANNEL_CANTYPE_ONLY)
+```
+```c
+// src/CBD/Can/can_drv.c:1333
+defined( C_ENABLE_INDICATION_FCT ) /* CODE CATEGORY 1 START */ static void CanHL_IndRxHandle(CanReceiveHandle rxHandle)
+```
+
+## 파일이름 : can_inc
+
+- 경로: `src/CBD/Can/can_inc.h`
+- 파일 종류: `.h`
+- 파일 크기: 3,256 bytes
+- 파일 내용: CAN 드라이버 사용을 위한 통합 include 헤더이다.
+
+### 1. .c/.h 파일 이름
+
+- `can_inc.h`
+
+### 2. 파일 내 변수, 매크로 등 전역 심볼
+
+- 매크로 수: 1
+- typedef/struct/enum 후보 수: 0
+- 전역 변수/테이블 선언 후보 수: 0
+
+#### 주요 매크로
+- L40 `_CAN_INC_H`
+
+#### 주요 typedef/구조체
+- 없음
+
+#### 주요 전역 변수/테이블 선언
+- 없음
+
+### 3. 파일 내 함수명
+
+- 함수 선언/정의 후보 수: 0
+
+- 없음
+
+### 4. 각 함수별 역할 설명
+
+- 함수 없음: 설정/타입/매크로 전용 파일이다.
+
+### 5. 필요시 코드 부연 설명
+
+이 파일은 생성 설정/선언 성격이 강해 별도 코드 전문 인용 없이 심볼 표로 역할을 설명했다.
