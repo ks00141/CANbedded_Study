@@ -24,6 +24,34 @@ CBD 미들웨어의 가장 아래에는 공통 타입과 유틸리티 함수가 
 
 PC에서 학습용으로 재구현할 때는 메모리 클래스 매크로를 비워 두어도 된다. 중요한 것은 상위 코드가 “어떤 메모리 영역인지”를 추상적으로 표현한다는 점이다.
 
+### 왜 공통 타입 계층이 먼저 필요한가
+
+차량용 미들웨어는 수명이 길고, 컴파일러와 MCU가 바뀌어도 동일한 상위 로직을 유지해야 한다. 이때 C 표준 타입을 직접 사용하는 코드와, 플랫폼 추상 타입을 사용하는 코드는 유지보수성이 크게 다르다. 예를 들어 `unsigned long`의 크기는 컴파일러/ABI에 따라 달라질 수 있지만, CAN payload의 32비트 신호는 항상 정확히 32비트여야 한다. 그래서 미들웨어는 `vuint32`처럼 의미가 고정된 타입을 사용한다.
+
+또한 임베디드 C에서는 데이터가 어디에 배치되는지가 중요하다. calibration 상수, CAN ID 테이블, 진단 서비스 테이블은 flash/ROM에 두는 것이 일반적이고, runtime 상태, Rx/Tx buffer, 타이머 카운터는 RAM에 둔다. Vector 코드의 `V_MEMROM0`, `V_MEMROM1`, `V_MEMRAM0` 같은 매크로는 이런 배치 정책을 소스 코드에 직접 흩뿌리지 않고, 컴파일러별 memory section 문법으로 치환하기 위한 장치이다.
+
+### SPC58xC에서의 의미
+
+타깃 MCU를 `SPC58xC`로 잡으면 공통 계층은 더 중요해진다. `SPC58xC`는 차량용 Power Architecture 계열 MCU이므로 다음을 고려해야 한다.
+
+- 정렬: 16비트/32비트 접근은 정렬 조건을 만족시키는 편이 안전하다. CAN payload byte array에서 16/32비트 값을 바로 캐스팅해 읽기보다 byte 조립 함수를 사용하는 것이 이식성이 좋다.
+- endian: 기존 CBD 설정에는 big-endian 계열 설정이 보인다. 신호 packing/unpacking은 CPU endian에 의존하지 않도록 명시적인 shift/mask 방식으로 작성한다.
+- memory section: flash 상수 테이블과 RAM buffer를 구분해야 한다. 학습용 PC 구현에서는 매크로를 비워도 되지만, MCU 포팅 단계에서는 linker script와 section pragma로 연결한다.
+- interrupt 보호: CAN ISR과 주기 task가 같은 buffer를 만질 수 있으므로, 공통 계층에서 interrupt lock/unlock 추상화를 제공한다.
+
+### 공통 계층을 설계할 때의 기준
+
+공통 계층은 가능한 작고 보수적으로 유지한다. 여기에는 하드웨어 기능을 많이 넣지 않는다. 타입, boolean, null, memory class, byte copy, interrupt lock 정도만 둔다. 그래야 CAN Driver, IL, TP, UDS가 모두 같은 기반을 공유하면서도 서로 강하게 묶이지 않는다.
+
+학습용 구현에서는 `VStdRamMemCpy()`가 단순히 `memcpy()`를 감싸도 된다. 하지만 실제 ECU 구현에서는 다음 정책을 정해야 한다.
+
+- `NULL` 포인터를 assert로 잡을지, error hook을 호출할지
+- copy 길이가 0일 때 허용할지
+- ISR 안에서 호출 가능한 함수와 task에서만 호출 가능한 함수를 구분할지
+- 큰 buffer copy 중 interrupt disable 시간을 최소화할지
+
+이 단계의 핵심은 “상위 모듈이 플랫폼 차이를 직접 알지 않게 만든다”는 감각을 잡는 것이다.
+
 ## CBD 코드에서 관찰할 포인트
 
 `v_def.h`에서 다음을 확인한다.

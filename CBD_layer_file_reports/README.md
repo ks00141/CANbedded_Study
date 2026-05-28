@@ -2,6 +2,18 @@
 
 `src/CBD` 전체 파일을 계층별 Markdown 보고서로 분리 작성했다. 각 보고서는 파일별로 매크로, typedef/구조체, 전역 변수/테이블, 함수 목록, 함수별 역할 설명을 포함한다.
 
+## 재구현 학습 타깃 MCU
+
+학습용 재구현의 타깃 MCU는 STMicroelectronics `SPC58xC` 시리즈로 설정한다. 기존 CBD 원본은 HS-CAN/Classical CAN 기반 Vector CANbedded 구조이지만, 학습 로드맵의 최종 목표는 `SPC58xC`의 CAN-FD 가능 CAN controller를 고려해 구조를 확장하는 것이다.
+
+계층별 분석을 읽을 때는 다음 MCU 관점을 함께 적용한다.
+
+- `Can`: SPC58xC의 CAN/CAN-FD controller instance, mailbox/message RAM, bit timing, interrupt vector와 연결
+- `Gen`: 파생 제품별 CAN controller 수, FD payload size, BRS, arbitration/data bitrate를 설정화
+- `Common/VStdLib`: Power Architecture 정렬/endian, flash/RAM section 배치, interrupt lock 추상화
+- `Tp`: CAN-FD payload 증가에 따른 ISO-TP frame capacity와 timer 해상도 재검토
+- `Nm/Ccl`: BusOff/error state, transceiver/SBC 제어, online/offline 정책과 연결
+
 - [Can](Can.md): 3개 파일
 - [Ccl](Ccl.md): 3개 파일
 - [Common](Common.md): 1개 파일

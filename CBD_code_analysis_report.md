@@ -26,6 +26,22 @@
 
 따라서 이 코드는 PC용 일반 C 라이브러리가 아니라, 특정 차량 ECU와 특정 CAN DB에 맞춰 생성된 양산형 임베디드 통신 소프트웨어로 보는 것이 타당합니다.
 
+### 재구현 학습 타깃 MCU
+
+본 학습 문서 세트에서 재구현 대상으로 삼는 MCU는 STMicroelectronics `SPC58xC` 시리즈입니다. 기존 CBD 원본 생성 정보에는 `MPC5515`/`SPC56x` 계열 설정이 보이지만, 학습용 재구현은 `SPC58xC`를 기준으로 확장합니다.
+
+`SPC58xC` 적용 시 특히 다음을 고려해야 합니다.
+
+- Power Architecture 기반 automotive MCU 특성에 따른 endian, 정렬, interrupt ABI
+- 파생 제품별 CAN/CAN-FD controller instance 수와 기능 차이
+- CAN-FD 사용 시 arbitration/data phase bitrate 설정
+- CAN message RAM 또는 mailbox payload size 설정
+- flash/RAM section 배치를 위한 메모리 클래스 매크로 연결
+- BusOff/error passive/error warning interrupt 처리
+- transceiver 또는 SBC 제어가 필요한 경우 CCL/NM과 board support 계층의 연결
+
+따라서 PC 학습용 구현에서는 mock CAN HAL로 시작하되, 구조체와 설정 테이블은 `SPC58xC`의 CAN-FD 포팅을 수용할 수 있도록 설계하는 것이 좋습니다.
+
 ## 3. 전체 폴더 구조와 역할
 
 | 폴더/파일 | 역할 |

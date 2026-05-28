@@ -36,6 +36,44 @@
 | CRC | Classical CAN CRC | payload 길이에 따라 FD CRC 확장 |
 | ISO-TP | Single Frame 최대 7바이트 | CAN-FD에서는 더 큰 Single Frame 가능 |
 
+### SPC58xC에서 CAN-FD를 볼 때의 전제
+
+타깃 MCU는 `SPC58xC` 시리즈이다. 이 계열은 차량용 Power Architecture 기반 MCU 제품군이며, 파생 제품에 따라 CAN-FD를 지원하는 CAN controller 인스턴스를 제공한다. 따라서 마이그레이션은 소프트웨어 자료구조 확장과 동시에 MCU 주변장치 설정 변경을 포함한다.
+
+SPC58xC 적용 시 반드시 확인할 항목은 다음과 같다.
+
+- 사용 파생품이 실제로 CAN-FD를 지원하는 controller instance를 몇 개 제공하는가
+- 해당 instance의 message RAM 또는 mailbox가 64바이트 payload로 설정 가능한가
+- arbitration phase bitrate와 data phase bitrate clock source가 무엇인가
+- BRS 사용 시 transceiver와 네트워크가 data bitrate를 지원하는가
+- Rx filter가 Classical CAN과 CAN-FD frame을 어떻게 구분하는가
+- BusOff/error passive 상태 보고가 기존 Driver callback과 호환되는가
+- interrupt vector와 priority를 Classical CAN 대비 변경해야 하는가
+
+즉 CAN-FD 전환은 “프로토콜 옵션 하나 켜기”가 아니라 `CAN database`, `생성 설정`, `Driver HAL`, `TP`, `테스트 장비`, `네트워크 배선/트랜시버`를 함께 맞추는 작업이다.
+
+### CAN-FD DLC encoding을 반드시 분리해야 하는 이유
+
+Classical CAN에서는 DLC 0~8이 실제 payload 길이 0~8과 동일하다. 그래서 기존 코드에는 `dlc == length`라는 암묵적 전제가 생기기 쉽다. CAN-FD에서는 DLC 9가 9바이트가 아니라 12바이트를 뜻하고, DLC 15는 64바이트를 뜻한다. 이 때문에 CAN-FD 코드에서는 다음 두 값을 분리해야 한다.
+
+- `dlc`: CAN controller register에 기록되는 encoding 값
+- `length`: 애플리케이션/TP/IL이 실제로 복사할 byte 수
+
+이 분리를 하지 않으면 12바이트 frame을 9바이트로 복사하거나, 64바이트 frame을 15바이트로 잘못 처리하는 문제가 생긴다.
+
+### ISO-TP over CAN-FD의 설계 판단
+
+CAN-FD는 payload가 커지므로 모든 긴 UDS 응답이 ISO-TP Multi-frame이 되는 것은 아니다. 어떤 응답은 Single Frame으로 충분해진다. 그러나 이때도 ISO-TP header encoding, addressing byte, escape length 형식은 사용하는 ISO-TP 표준 버전과 OEM 요구사항을 따라야 한다.
+
+설계할 때는 다음 함수를 먼저 정의하면 좋다.
+
+```c
+vuint8 IsoTp_GetSingleFrameCapacity(vuint8 is_fd, vuint8 addressing_bytes);
+vuint8 IsoTp_GetConsecutiveFrameCapacity(vuint8 is_fd, vuint8 addressing_bytes);
+```
+
+이렇게 하면 UDS 계층은 그대로 두고 TP 계층만 CAN-FD frame capacity를 반영할 수 있다.
+
 ### CAN-FD 마이그레이션에서 깨지기 쉬운 지점
 
 1. `uint8_t data[8]` 고정 배열

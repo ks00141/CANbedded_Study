@@ -24,6 +24,50 @@ Basic NM의 핵심 책임은 다음과 같다.
 - 복구 완료 후 통신 재개
 - 애플리케이션 또는 CCL에 상태 통지
 
+### BusOff가 발생하는 이유
+
+CAN은 오류 검출과 오류 제한 기능을 프로토콜에 포함한다. 송신 오류가 반복되면 controller의 transmit error counter가 증가하고, 일정 수준을 넘으면 error passive, 더 심하면 BusOff 상태가 된다. BusOff 상태에서는 해당 노드가 버스에 영향을 주지 않도록 통신에서 분리된다.
+
+BusOff는 단순 software 오류가 아니라 배선 문제, termination 문제, bitrate mismatch, transceiver 문제, 심한 EMC 노이즈, 잘못된 CAN-FD timing 설정 등으로 발생할 수 있다. 그래서 Driver는 BusOff를 감지하고, NM은 복구 정책을 실행한다.
+
+### NM과 CAN Driver의 경계
+
+CAN Driver는 BusOff interrupt를 감지할 수 있지만, “얼마나 기다렸다가 복구할지”, “반복되면 느리게 복구할지”, “애플리케이션에 어떤 상태를 알릴지”는 네트워크 관리 정책이다.
+
+역할 분리는 다음과 같다.
+
+```text
+CAN Driver
+  -> BusOff 감지
+  -> NmBasicCanBusOff callback
+
+NM
+  -> 통신 중지
+  -> 복구 타이머 시작
+  -> 필요 시 CAN 재초기화 요청
+  -> 복구 완료 통지
+```
+
+### 빠른 복구와 느린 복구
+
+BusOff가 드물게 한 번 발생했다면 빠르게 복구해도 된다. 하지만 짧은 시간에 반복 BusOff가 발생한다면 버스 상태가 불안정하다는 뜻이므로 느린 복구로 전환해야 한다. CBD의 Basic NM 설정에는 fast recovery time, slow recovery time, fast-to-slow 전환 기준이 있다.
+
+학습용 구현에서는 BusOff 횟수를 세고, 일정 횟수 이상이면 recovery timer를 길게 잡는 방식으로 충분하다.
+
+### SPC58xC 적용 관점
+
+`SPC58xC`의 CAN/CAN-FD controller는 BusOff, error warning, error passive 같은 상태를 register/interrupt로 제공한다. 실제 이식에서는 다음이 중요하다.
+
+- BusOff interrupt가 어느 controller instance에서 발생했는지 식별
+- BusOff 상태에서 controller를 어떤 순서로 freeze/init/normal mode로 되돌릴지 정의
+- CAN-FD data phase timing 오류가 BusOff 반복을 만들 수 있으므로 timing 설정 검증
+- transceiver enable/standby pin이 있다면 NM/CCL 상태와 함께 제어
+- watchdog이 있는 시스템에서 복구 루프가 watchdog policy와 충돌하지 않도록 설계
+
+### NM 상태와 진단
+
+진단 중 BusOff가 발생하면 UDS 응답을 보내지 못할 수 있다. 따라서 NM 상태는 CCL과 UDS에도 영향을 준다. 예를 들어 BusOff 중에는 CommunicationControl 요청을 처리할 수 없거나, response pending 이후 timeout이 발생할 수 있다. 학습용 구조에서도 NM 상태를 읽을 수 있는 API를 두면 상위 계층이 방어적으로 동작할 수 있다.
+
 ## CBD 코드에서 관찰할 포인트
 
 - `NmBasicInitPowerOn`

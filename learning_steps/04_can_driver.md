@@ -39,6 +39,68 @@ CAN Rx interrupt
 
 BusOff는 CAN 컨트롤러가 버스 오류 누적으로 통신 불능 상태가 되었음을 의미한다. Driver는 BusOff를 감지하면 NM 또는 CCL에 알리고, 복구 정책은 상위 계층이 결정한다.
 
+### CAN Driver의 책임 범위
+
+CAN Driver는 프로토콜을 해석하지 않는다. Driver가 알아야 하는 것은 CAN ID, frame format, DLC, data, mailbox, interrupt, controller state이다. UDS 서비스 ID나 IL 신호 의미는 알면 안 된다. 계층을 잘 나누면 Driver는 다음만 담당한다.
+
+- CAN controller 초기화
+- Tx mailbox 또는 Tx queue 관리
+- Rx mailbox/filter 설정
+- 송신 요청을 hardware frame으로 변환
+- 수신 hardware frame을 software Rx handle로 매핑
+- Tx confirmation 전달
+- BusOff, wakeup, error interrupt 처리
+
+이 책임 범위를 넘어서면 Driver가 IL/TP/UDS에 종속되고, CAN-FD 전환이나 다른 MCU 이식이 어려워진다.
+
+### SPC58xC에서 Driver가 고려할 하드웨어 요소
+
+`SPC58xC` 시리즈로 이식할 때 CAN Driver는 다음 하드웨어 항목과 연결된다.
+
+- CAN/CAN-FD controller instance 선택
+- peripheral clock enable 및 clock source 설정
+- CAN bit timing register 설정
+- CAN-FD 사용 시 data phase bit timing과 BRS 설정
+- message RAM 또는 mailbox payload size 설정
+- Rx filter/acceptance mask 설정
+- Tx/Rx interrupt vector 등록
+- BusOff/error state interrupt 처리
+- controller freeze/init/normal mode 전환
+
+학습용 PC mock에서는 이 모든 것을 생략할 수 있지만, Driver API는 나중에 이 정보가 들어올 자리를 남겨두어야 한다. 예를 들어 `Can_Init()`이 아무 인자 없이 동작하더라도 내부적으로는 `CanControllerConfig` 테이블을 읽는 구조가 좋다.
+
+### Tx 경로의 핵심 상태
+
+송신은 단순히 `memcpy` 후 끝나는 일이 아니다. 실제 ECU에서는 다음 상태를 관리한다.
+
+1. 상위 계층이 Tx handle로 송신 요청
+2. Driver가 handle 유효성, online 상태, DLC/length 검사
+3. 사용 가능한 Tx mailbox 또는 queue 확인
+4. CAN ID, frame format, DLC, data를 hardware register/message RAM에 기록
+5. 송신 요청 bit set
+6. Tx complete interrupt 발생
+7. confirmation flag/callback 처리
+
+Tx queue가 있으면 mailbox가 바쁠 때 요청을 보관하고, confirmation 시 다음 frame을 꺼내 전송한다.
+
+### Rx 경로의 핵심 상태
+
+수신은 Rx filter가 먼저 frame을 통과시키고, Driver가 ID를 기준으로 Rx handle을 찾는다. FullCAN 방식은 특정 mailbox가 특정 ID를 받도록 설정하고, BasicCAN 방식은 넓은 filter로 받은 뒤 software에서 ID를 찾는다. CBD 설정에는 FullCAN과 BasicCAN 개념이 함께 보인다.
+
+Rx 처리의 주의점은 ISR에서 너무 많은 일을 하지 않는 것이다. ISR에서는 frame을 안전한 buffer로 복사하고 flag를 세운 뒤, task context에서 IL/TP callback을 호출하는 설계가 안정적이다. 단, latency가 중요한 경우 일부 precopy는 ISR에서 처리할 수 있다.
+
+### CAN-FD 확장 여지
+
+Classical CAN Driver를 작성할 때도 `dlc`와 `length`를 구분해두면 좋다. Classical CAN에서는 둘이 거의 같지만 CAN-FD에서는 DLC 9가 12바이트를 의미한다. Driver 내부 frame 구조체는 처음부터 다음 필드를 고려한다.
+
+- `is_extended`
+- `is_fd`
+- `brs`
+- `esi`
+- `dlc`
+- `length`
+- `data[64]`
+
 ## CBD 코드에서 관찰할 포인트
 
 먼저 다음 함수를 중심으로 본다.

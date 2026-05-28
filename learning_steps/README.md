@@ -1,6 +1,8 @@
 # CBD 미들웨어 단계별 학습 자료
 
-이 폴더는 [loadmap.md](../loadmap.md)의 학습 단계를 기준으로 작성한 단계별 학습 자료이다. 마지막 단계는 기존 HS-CAN 구조를 CAN-FD 통신 스펙으로 마이그레이션하는 확장 학습이다.
+이 폴더는 [loadmap.md](../loadmap.md)의 학습 단계를 기준으로 작성한 단계별 학습 자료이다. 학습용 재구현의 타깃 MCU는 STMicroelectronics `SPC58xC` 시리즈로 설정한다. 마지막 단계는 기존 HS-CAN 구조를 CAN-FD 통신 스펙으로 마이그레이션하는 확장 학습이다.
+
+각 단계의 이론 설명은 PC mock 구현과 `SPC58xC` 적용 관점을 함께 다룬다. 즉, 처음에는 표준 C와 간단한 mock으로 동작 모델을 만들고, 이후 `SPC58xC`의 CAN/CAN-FD 컨트롤러, interrupt, memory section, peripheral clock, endian/정렬 조건에 맞춰 이식하는 흐름을 전제로 한다.
 
 각 파일은 다음 구성을 따른다.
 

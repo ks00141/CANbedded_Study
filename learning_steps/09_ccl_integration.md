@@ -36,6 +36,67 @@ DIAG request = OFF
 => communication can stop
 ```
 
+### CCL이 필요한 이유
+
+CAN Driver에는 online/offline 함수가 있을 수 있지만, 누가 어떤 이유로 통신을 켜야 하는지까지 알지는 못한다. 애플리케이션은 정상 운전 상태에서 통신을 요청할 수 있고, 진단은 TesterPresent나 active session 동안 통신을 유지해야 할 수 있으며, NM은 BusOff 중 통신을 강제로 막아야 한다. CCL은 이 요청들을 한 곳에서 합산해 실제 통신 상태를 결정한다.
+
+CCL 없이 각 계층이 직접 `Can_SetOnline()`과 `Can_SetOffline()`을 호출하면 다음 문제가 생긴다.
+
+- 진단이 통신을 요구 중인데 애플리케이션이 offline으로 내려버릴 수 있다.
+- BusOff 복구 중인데 다른 계층이 online으로 올릴 수 있다.
+- sleep 진입 조건을 판단하기 어렵다.
+- CommunicationControl 서비스가 IL/TP/CAN 어디까지 막아야 하는지 불명확해진다.
+
+### 요청 기반 상태 모델
+
+가장 단순한 CCL 모델은 사용자별 request bit를 두는 것이다.
+
+```text
+request[APP]  = 1
+request[DIAG] = 0
+request[NM]   = 0
+=> communication requested
+```
+
+하지만 실제 ECU에서는 inhibit 조건도 필요하다.
+
+```text
+any request == true
+busoff inhibit == false
+sleep inhibit == false
+=> communication active
+```
+
+즉 CCL은 “요청”과 “금지 조건”을 모두 고려한다.
+
+### CommunicationControl과 CCL
+
+UDS `0x28 CommunicationControl`은 진단기가 ECU의 송수신을 제어하는 서비스이다. 이 서비스는 단순히 CAN Driver를 offline으로 내리는 것과 다르다. 예를 들어 Rx는 허용하고 Tx만 막거나, Tx는 허용하고 Rx만 막는 조합이 가능하다.
+
+따라서 CCL에는 최소한 다음 상태가 있어야 한다.
+
+- network requested 여부
+- Tx enabled 여부
+- Rx enabled 여부
+- busoff inhibit 여부
+- sleep allowed 여부
+
+CAN Driver의 `Can_Transmit()`은 CCL의 Tx enabled 상태를 확인할 수 있고, Rx indication 경로는 Rx enabled 상태에 따라 상위 계층 전달을 막을 수 있다.
+
+### SPC58xC 적용 관점
+
+`SPC58xC`에서 CCL은 MCU의 CAN controller mode와 transceiver 제어에도 연결될 수 있다. 실제 시스템에는 CAN transceiver standby pin, wakeup pin, SBC(System Basis Chip) 제어가 있을 수 있다. CCL은 이런 하드웨어 제어를 직접 레지스터 수준으로 처리하기보다, `CanIf` 또는 board support 함수로 추상화하는 편이 좋다.
+
+또한 CAN-FD controller가 Classical CAN mailbox와 FD mailbox를 모두 갖는 구조라면, CCL의 Tx/Rx enable 정책이 두 frame format 모두에 적용되어야 한다. 진단만 CAN-FD로 올라가고 일반 신호는 Classical CAN으로 남는 혼합 구조도 가능하므로, CCL은 frame format을 가리지 않는 상위 정책 계층이어야 한다.
+
+### 설계 기준
+
+1. CCL은 통신 정책을 결정한다.
+2. CAN Driver는 CCL이 정한 online/offline/Tx enable 상태를 실행한다.
+3. UDS CommunicationControl은 CCL API를 통해 상태를 바꾼다.
+4. NM BusOff는 CCL에 inhibit 조건으로 반영된다.
+5. 애플리케이션은 직접 CAN Driver를 내리지 않고 CCL에 요청/해제를 알린다.
+
 ## CBD 코드에서 관찰할 포인트
 
 - `CclRequestCommunication`

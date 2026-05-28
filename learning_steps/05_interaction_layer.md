@@ -27,6 +27,71 @@ IlPutTxIPSU_Recline_Current_Pos(1234u);
 
 수신은 반대이다. CAN Driver가 수신 데이터를 버퍼에 복사하면, 애플리케이션은 `IlGetRx...()` 함수로 신호 값을 읽는다.
 
+### IL이 해결하는 문제
+
+CAN 메시지는 8바이트 또는 CAN-FD에서는 최대 64바이트의 byte stream이다. 하지만 애플리케이션 입장에서는 `Recline_Current_Pos`, `Slide_Target_Pos`, `Footrest_Current_Sta` 같은 신호가 필요하다. IL은 이 둘 사이의 변환 계층이다.
+
+IL이 없으면 애플리케이션은 다음을 직접 알아야 한다.
+
+- 어떤 메시지에 어떤 신호가 있는지
+- 신호 시작 bit와 bit length가 무엇인지
+- byte order가 Intel인지 Motorola인지
+- 주기 송신인지 이벤트 송신인지
+- 수신 timeout이나 indication flag가 필요한지
+
+IL은 이 정보를 generated code로 감싸서 애플리케이션이 함수 호출만 하도록 만든다.
+
+### Tx IL의 동작 모델
+
+Tx 방향에서 IL은 애플리케이션이 쓴 신호 값을 Tx buffer에 반영하고, 주기 task 또는 이벤트 trigger 시 CAN Driver에 송신 요청을 보낸다.
+
+기본 흐름:
+
+```text
+Application
+  -> IlPutTxSignal(value)
+  -> Tx message buffer update
+  -> IlTxTask()
+  -> CanTransmit(txHandle)
+```
+
+주기 메시지는 counter를 사용한다. 예를 들어 task 주기가 10ms이고 메시지 주기가 200ms이면 counter가 20에 도달할 때 송신한다. 이벤트 메시지는 신호 값 변경 또는 명시적 send 요청에 의해 더 빨리 나갈 수 있다.
+
+### Rx IL의 동작 모델
+
+Rx 방향에서 Driver가 수신 frame을 buffer에 복사하면 IL은 수신 상태를 갱신한다. 설정에 따라 indication flag, timeout counter, first value flag, data changed flag를 관리할 수 있다. 현재 CBD 설정에서는 timeout/flag 기능이 많이 비활성화되어 있지만, 구조적으로는 IL이 담당하는 영역이다.
+
+기본 흐름:
+
+```text
+CAN Driver
+  -> Rx handle matched
+  -> Rx data buffer copy
+  -> IlCanGenericPrecopy / indication
+  -> Application IlGetRxSignal()
+```
+
+### SPC58xC 적용 관점
+
+IL은 MCU register를 직접 다루지 않는다. 하지만 `SPC58xC`에서 interrupt와 task가 동시에 buffer에 접근할 수 있으므로 concurrency를 고려해야 한다.
+
+- Rx buffer는 CAN ISR 또는 Driver task에서 갱신될 수 있다.
+- Application task는 같은 buffer를 읽을 수 있다.
+- 16/32비트 신호를 여러 byte로 읽는 중 ISR이 buffer를 갱신하면 tearing이 생길 수 있다.
+
+해결 방법은 다음 중 하나이다.
+
+- 신호 읽기 중 짧은 interrupt lock 사용
+- double buffer 사용
+- Rx indication 시점에 shadow copy 생성
+- 8/16/32비트 atomic 접근이 보장되는 신호만 직접 접근
+
+학습용 구현에서는 단순하게 시작하되, 실제 MCU 이식 단계에서는 buffer 보호 정책을 반드시 정해야 한다.
+
+### CAN-FD와 IL
+
+CAN-FD에서는 한 메시지에 더 많은 신호를 넣을 수 있다. 따라서 IL은 message length를 설정에서 읽고, signal accessor가 payload 범위를 넘지 않는지 검사해야 한다. 기존 HS-CAN 메시지는 8바이트 layout을 유지하고, FD 메시지만 확장 layout을 쓰는 식으로 공존 설계를 하는 편이 안전하다.
+
 ## CBD 코드에서 관찰할 포인트
 
 - `IlTxTask`: 주기 송신 처리

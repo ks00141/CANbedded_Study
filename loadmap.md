@@ -2,7 +2,9 @@
 
 ## 1. 목표
 
-이 로드맵의 목표는 `src/CBD`에 포함된 Vector CANbedded 계열 미들웨어 묶음을 학습하여, 동일한 구조의 C 언어 기반 미들웨어를 단계적으로 재구현할 수 있는 이해 순서와 구현 순서를 잡는 것이다.
+이 로드맵의 목표는 `src/CBD`에 포함된 Vector CANbedded 계열 미들웨어 묶음을 학습하여, 동일한 구조의 C 언어 기반 미들웨어를 단계적으로 재구현할 수 있는 이해 순서와 구현 순서를 잡는 것이다. 재구현 학습의 타깃 MCU는 STMicroelectronics `SPC58xC` 시리즈로 설정한다.
+
+`SPC58xC`는 차량용 32-bit Power Architecture 계열 MCU 제품군으로, 파생 제품에 따라 CAN/CAN-FD 컨트롤러, 자동차용 안전/진단 기능, 플래시/RAM, 타이머, 인터럽트 컨트롤러, 시스템 보호 기능을 제공한다. 따라서 학습용 미들웨어는 PC mock 환경에서 먼저 구현하되, 최종 구조는 `SPC58xC`의 CAN-FD 가능 CAN 컨트롤러, interrupt vector, big-endian/정렬 이슈, 메모리 배치, peripheral clock 설정을 고려해 설계한다.
 
 대상 미들웨어는 다음 계층으로 구성된다.
 
@@ -42,6 +44,17 @@ MCU / CAN Hardware
 | 8 | NM | BusOff 복구와 네트워크 상태 관리 이해 | `Nm/nm_basic.*`, `Gen/nmb_cfg.h` |
 | 9 | CCL | 통신 요청/해제, 진단 통신 제어 통합 이해 | `Ccl/*`, `Gen/ccl_cfg.h` |
 | 10 | CAN-FD Migration | HS-CAN 구조를 CAN-FD 데이터 길이, DLC, BRS, ISO-TP over CAN-FD로 확장 | 기존 전체 계층, 신규 FD 설정 |
+
+## 2.1. 타깃 MCU: SPC58xC 적용 관점
+
+`SPC58xC` 시리즈를 대상으로 재구현할 때는 다음 관점을 처음부터 염두에 둔다.
+
+- CPU/컴파일러 관점: Power Architecture 기반 automotive MCU이므로 정렬, endian, interrupt ABI, compiler intrinsic 사용 가능성을 고려한다.
+- CAN 주변장치 관점: 파생 제품에 따라 Classical CAN과 CAN-FD 지원 컨트롤러 구성이 다를 수 있으므로, CAN Driver는 HAL 추상화 계층을 둔다.
+- 메모리 관점: Vector 코드의 `V_MEMROM`, `V_MEMRAM` 같은 메모리 클래스 매크로는 SPC58xC의 flash/RAM section 배치로 연결될 수 있다.
+- 인터럽트 관점: CAN Rx/Tx/BusOff interrupt는 ISR에서 최소 처리 후 task/context 함수로 넘기는 구조가 안전하다.
+- 타이밍 관점: CAN-FD에서는 arbitration phase와 data phase bitrate가 분리될 수 있으므로, CAN bit timing 설정을 Driver 설정 구조에 포함한다.
+- 안전성 관점: ECU 미들웨어에서는 invalid handle, DLC mismatch, buffer overflow, BusOff 반복, diagnostic session timeout을 모두 방어적으로 처리해야 한다.
 
 ## 3. 1단계: 공통 타입과 유틸리티 학습
 

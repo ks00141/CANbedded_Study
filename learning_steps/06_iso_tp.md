@@ -26,6 +26,73 @@ CAN 한 프레임은 보통 최대 8바이트이다. 하지만 UDS 진단 요청
 
 Normal Addressing, 8바이트 CAN 기준으로 Single Frame은 최대 7바이트 payload를 담는다. First Frame은 전체 길이와 처음 6바이트 데이터를 담는다.
 
+### ISO-TP가 필요한 이유
+
+UDS는 진단 데이터를 byte stream으로 다룬다. 예를 들어 DID 읽기 응답은 수십 바이트가 될 수 있고, RoutineControl 응답도 8바이트를 넘을 수 있다. 하지만 Classical CAN frame은 최대 8바이트만 보낼 수 있다. ISO-TP는 이 차이를 해결하는 segmentation/reassembly 계층이다.
+
+ISO-TP의 핵심은 “상위 계층에는 긴 payload 하나처럼 보이게 하고, 하위 CAN에는 여러 frame으로 나누어 보내는 것”이다. 따라서 UDS는 frame이 몇 개로 쪼개졌는지 몰라야 하고, CAN Driver는 UDS 서비스 의미를 몰라야 한다.
+
+### 수신 상태 머신
+
+수신 상태는 보통 다음처럼 단순화할 수 있다.
+
+```text
+IDLE
+  | Single Frame 수신
+  v
+COMPLETE
+
+IDLE
+  | First Frame 수신
+  v
+WAIT_CF
+  | Consecutive Frame 정상 수신
+  v
+WAIT_CF 또는 COMPLETE
+```
+
+First Frame을 받으면 전체 길이를 알 수 있다. 이후 Consecutive Frame의 sequence number를 1, 2, 3... 순서로 검사한다. sequence number가 틀리거나 timeout이 발생하면 수신을 중단하고 상위 계층에 error indication을 전달한다.
+
+### 송신 상태 머신
+
+송신은 반대로 payload 길이에 따라 Single Frame 또는 Multi-frame을 선택한다.
+
+```text
+IDLE
+  | length <= SF capacity
+  v
+SEND_SF -> WAIT_CONFIRM -> IDLE
+
+IDLE
+  | length > SF capacity
+  v
+SEND_FF -> WAIT_FC -> SEND_CF -> WAIT_CONFIRM/DELAY -> IDLE
+```
+
+Flow Control은 수신자가 송신자에게 “계속 보내도 된다”, “기다려라”, “overflow라 중단하라”를 알려주는 frame이다. Block Size가 0이면 끝까지 연속 전송이 가능하고, 0이 아니면 지정된 수의 CF를 보낸 뒤 다시 FC를 기다린다.
+
+### 타이밍과 오류 처리
+
+ISO-TP 구현에서 가장 중요한 것은 정상 경로보다 오류 경로이다.
+
+- First Frame 이후 buffer가 부족하면 overflow 처리
+- Consecutive Frame sequence number가 틀리면 수신 중단
+- Flow Control이 오지 않으면 Tx timeout
+- Consecutive Frame이 오지 않으면 Rx timeout
+- STmin보다 빨리 CF를 보내면 수신 측이 거부할 수 있음
+
+CBD의 `TpRxTimeoutCF`, `TpTxTimeoutFC`, `TpSTMin` 같은 설정은 이런 상태 머신의 시간 기준이다.
+
+### SPC58xC 적용 관점
+
+`SPC58xC`에서는 ISO-TP 자체가 하드웨어에 종속되지는 않지만, timer tick과 CAN confirmation timing에 영향을 받는다. 일반적으로 10ms task tick만으로는 STmin이 작은 경우 정밀도가 부족할 수 있다. CAN-FD data phase를 사용하면 frame 간 간격이 더 짧아질 수 있으므로, STmin 처리에 사용할 timer 해상도를 설계해야 한다.
+
+또한 ISR에서 TP 상태 머신을 전부 돌릴지, task에서 돌릴지도 결정해야 한다. 안전한 기본 구조는 ISR에서는 frame을 queue에 넣고, `TpTask()`에서 상태 머신을 진행하는 것이다.
+
+### CAN-FD와 ISO-TP
+
+CAN-FD에서는 한 frame payload가 커져 Single Frame으로 처리 가능한 UDS 메시지가 늘어난다. Multi-frame에서도 Consecutive Frame 하나에 더 많은 데이터를 넣을 수 있어 frame 수가 줄어든다. 하지만 ISO-TP over CAN-FD는 PCI encoding과 addressing format에 따라 세부 규칙이 달라질 수 있으므로, 구현 전에 사용할 표준 버전과 OEM 요구사항을 확정해야 한다.
+
 ## CBD 코드에서 관찰할 포인트
 
 - `TpInit`
