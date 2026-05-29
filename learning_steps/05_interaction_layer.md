@@ -186,13 +186,6 @@ void Il_CanRxIndication(CanRxHandle rx)
 }
 ```
 
-## 연습문제
-
-1. `IlPutTxIPSU_Recline_Target_Pos()`를 구현하라. 4~7바이트에 32비트 값을 저장한다.
-2. `IlGetRxCGW_Recline_Max_VrtLmt_Value()`를 구현하라. 2~3바이트에서 16비트 값을 읽는다.
-3. 100ms 주기 메시지와 200ms 주기 메시지를 각각 다른 카운터로 송신하라.
-4. Rx indication flag를 추가하고, 애플리케이션이 읽으면 flag가 clear되도록 구현하라.
-5. `Il_TxStop()` 상태에서는 주기 송신이 발생하지 않음을 테스트하라.
 
 ## 단계 산출물
 
@@ -201,10 +194,18 @@ void Il_CanRxIndication(CanRxHandle rx)
 - `middleware/il/il.h`: signal read/write, Tx request, Rx indication API
 - `middleware/il/il.c`: Tx 주기 처리, Rx buffer 갱신, timeout 감시
 - `middleware/il/il_par.h`, `middleware/il/il_par.c`: message별 signal layout, 주기, timeout, 초기값 설정
-- `tests/il/test_il_signal.c`: endian/offset/length signal packing 테스트
-- `tests/il/test_il_periodic.c`: 주기 송신과 timeout 검증 테스트
+- `bringup/il/il_signal_bringup.c`: 실제 Tx/Rx payload와 signal 값을 비교하는 bring-up 코드
+- `bringup/il/il_periodic_bringup.c`: 주기 송신과 timeout을 CAN analyzer trace로 확인하는 bring-up 코드
 
 HS-CAN 결과물에서는 8바이트 message 안에서 signal packing/unpacking이 정확해야 한다. CAN-FD 결과물에서는 64바이트 payload 내부 signal도 같은 API로 접근하되, 기존 8바이트 메시지의 동작은 변하지 않아야 한다.
+
+## 구현 가이드
+
+1. `il_par.c`에 message별 signal start bit, bit length, byte order, factor/offset 적용 여부, Tx period, timeout을 테이블로 작성한다.
+2. `Il_SetSignal()`과 `Il_GetSignal()`은 CPU endian에 의존하지 않고 byte array에 shift/mask로 접근한다. 처음에는 8/16/32비트 unsigned signal부터 구현하고, signed/scaled signal은 이후 확장한다.
+3. Rx path는 `Can_RxIndication()`에서 IL Rx buffer를 갱신하고 update flag와 timeout counter를 reset하도록 연결한다. ISR에서 긴 처리를 하지 않도록 copy 범위와 lock 범위를 제한한다.
+4. Tx path는 10ms 또는 프로젝트 task tick에서 period counter를 감소시키고, 만료 시 `Can_Write()`로 송신한다. analyzer trace에서 실제 송신 주기가 설정값과 맞는지 확인한다.
+5. 실제 CAN frame을 수신시켜 payload hex와 `Il_GetSignal()` 결과를 디버거 watch에서 비교한다. Tx 방향은 application 값 변경 후 analyzer payload가 기대값으로 바뀌는지 확인한다.
 
 ## 적용 고려사항과 트러블슈팅
 

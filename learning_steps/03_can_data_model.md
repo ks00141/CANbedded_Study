@@ -139,15 +139,23 @@ typedef vuint8 CanRxHandle;
 
 typedef struct
 {
-    vuint16 id;
+    vuint32 id;
+    vuint8 is_extended;
+    vuint8 is_fd;
+    vuint8 brs;
     vuint8 dlc;
+    vuint8 length;
     vuint8 *data;
 } CanTxObjectConfig;
 
 typedef struct
 {
-    vuint16 id;
+    vuint32 id;
+    vuint8 is_extended;
+    vuint8 is_fd;
+    vuint8 brs;
     vuint8 dlc;
+    vuint8 length;
     vuint8 *data;
 } CanRxObjectConfig;
 
@@ -169,14 +177,14 @@ vuint8 GST_IPSU[8];
 
 const CanTxObjectConfig CanTxConfig[CanTxCount] =
 {
-    { 0x700u, 8u, IPSU_GST },
-    { 0x510u, 8u, IPSU_01_200ms }
+    { 0x700u, 0u, 0u, 0u, 8u, 8u, IPSU_GST },
+    { 0x510u, 0u, 0u, 0u, 8u, 8u, IPSU_01_200ms }
 };
 
 const CanRxObjectConfig CanRxConfig[CanRxCount] =
 {
-    { 0x410u, 8u, CGW_01_200ms },
-    { 0x7E0u, 8u, GST_IPSU }
+    { 0x410u, 0u, 0u, 0u, 8u, 8u, CGW_01_200ms },
+    { 0x7E0u, 0u, 0u, 0u, 8u, 8u, GST_IPSU }
 };
 ```
 
@@ -194,12 +202,6 @@ const CanTxObjectConfig *Can_GetTxConfig(CanTxHandle handle)
 }
 ```
 
-## 연습문제
-
-1. Tx 메시지 3개, Rx 메시지 3개를 갖는 설정 테이블을 작성하라.
-2. CAN ID를 입력받아 대응되는 `CanRxHandle`을 찾는 함수를 작성하라.
-3. DLC가 8보다 큰 설정값이 들어오면 컴파일 또는 초기화 단계에서 오류를 반환하도록 구현하라.
-4. `IPSU_01_200ms` 버퍼의 0~3바이트를 32비트 little-endian 값으로 쓰는 함수를 작성하라.
 
 ## 단계 산출물
 
@@ -209,9 +211,17 @@ const CanTxObjectConfig *Can_GetTxConfig(CanTxHandle handle)
 - `middleware/can/can_frame.h`: Classical CAN과 CAN-FD를 모두 표현할 수 있는 `CanFrame` 구조체
 - `middleware/can/can_dlc.h`, `middleware/can/can_dlc.c`: DLC와 실제 payload length 변환 함수
 - `middleware/can/can_par.h`, `middleware/can/can_par.c`: message handle과 ID/filter/length 정책 매핑
-- `tests/can/test_can_data_model.c`: ID 범위, DLC 변환, length 검증 테스트
+- `bringup/can/can_model_bringup.c`: frame 생성 결과와 DLC/length 변환 결과를 디버거로 확인하는 bring-up 코드
 
 HS-CAN 산출물에서는 `length <= 8`인 frame만 허용한다. CAN-FD 산출물에서는 `length <= 64`, DLC 9~15의 비선형 payload 길이, BRS 여부를 구조체에서 표현할 수 있어야 한다.
+
+## 구현 가이드
+
+1. `can_types.h`에 `CanChannel`, `CanTxHandle`, `CanRxHandle`, `CanIdType`, `CanFrameFormat`, `CanReturnType`을 정의한다. handle은 배열 index로 사용할 수 있도록 unsigned 정수로 고정한다.
+2. `can_frame.h`의 `CanFrame`은 `id`, `is_extended`, `is_fd`, `brs`, `esi`, `dlc`, `length`, `data[64]`를 포함한다. Classical CAN도 같은 구조체를 쓰되 `is_fd=0`, `length<=8`로 제한한다.
+3. `can_dlc.c`에 `CanFd_DlcToLength()`와 `CanFd_LengthToDlc()`를 구현한다. 0~8은 동일 매핑, 9~15는 12/16/20/24/32/48/64로 변환한다.
+4. `Can_ValidateFrame()`을 작성해 ID 범위, format별 최대 length, DLC/length 일치 여부, BRS 사용 조건을 검사한다. 이 함수는 Driver 송신 직전에도 재사용한다.
+5. 디버거 watch 또는 CAN analyzer 송신 준비 buffer로 8, 12, 16, 64바이트 frame을 확인한다. 특히 `DLC=9`가 `length=12`로 처리되는지 반드시 확인한다.
 
 ## 적용 고려사항과 트러블슈팅
 

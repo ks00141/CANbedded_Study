@@ -299,15 +299,6 @@ vuint8 IsoTp_GetConsecutiveFramePayload(vuint8 is_canfd, vuint8 addressing_bytes
 9. UDS response buffer와 responseTooLong 기준을 재검토한다.
 10. NM/CCL에서 FD frame도 동일하게 online/offline 제어되는지 검증한다.
 
-## 연습문제
-
-1. `CanFd_DlcToLength()`와 `CanFd_LengthToDlc()`의 테스트 케이스를 작성하라.
-2. Classical CAN frame에 `length=12`가 들어오면 송신을 거부하는 코드를 작성하라.
-3. FD frame `length=12`가 들어오면 DLC `9`로 변환되는지 확인하라.
-4. 기존 `uint8_t data[8]` 기반 Tx/Rx 설정 구조체를 `data[64]` 또는 pointer+length 구조로 변경하라.
-5. ISO-TP Single Frame 송신 함수가 CAN-FD 여부에 따라 Single Frame 가능 길이를 다르게 판단하도록 구현하라.
-6. 기존 UDS `0x22` 응답이 30바이트일 때 Classical CAN과 CAN-FD에서 각각 몇 개 프레임으로 나뉘는지 계산하라.
-7. CCL에서 Tx disable 상태일 때 Classical CAN과 CAN-FD 송신이 모두 막히는지 테스트하라.
 
 ## 단계 산출물
 
@@ -318,9 +309,45 @@ vuint8 IsoTp_GetConsecutiveFramePayload(vuint8 is_canfd, vuint8 addressing_bytes
 - `middleware/config/canfd_cfg.h`: nominal/data bitrate, payload size, message별 FDF/BRS/length 설정
 - `middleware/tp/isotp_canfd.c`: CAN-FD payload 크기를 반영한 ISO-TP 확장 구현 또는 공용 구현의 FD path
 - `examples/canfd_middleware/main.c`: SPC584C70 CAN-FD middleware 통합 예제
-- `tests/integration/test_canfd_stack.c`: Classical 회귀와 CAN-FD 신규 동작을 함께 검증하는 통합 테스트
+- `bringup/integration/canfd_stack_bringup.c`: Classical 회귀와 CAN-FD 신규 동작을 실제 bus에서 확인하는 통합 bring-up 코드
 
 최종적으로 저장소에는 HS-CAN variant와 CAN-FD variant가 동시에 존재해야 한다. 공통 계층, 설정 구조, IL/TP/UDS/NM/CCL의 대부분은 공유하고, 하드웨어 설정과 frame format 정책만 variant별로 달라지는 구조가 목표다.
+
+## 구현 가이드
+
+1. 9단계 HS-CAN baseline analyzer trace를 먼저 고정한다. 같은 DBC 메시지, 같은 주기, 같은 진단 요청이 CAN-FD 변경 후에도 유지되는지 비교 기준으로 사용한다.
+2. `CanFrame`과 설정 테이블에 `is_fd`, `brs`, `esi`, `length`, `dlc`를 추가한다. Classical CAN path는 `length<=8`, `is_fd=0` 조건을 계속 유지한다.
+3. `canfd_cfg.h`에 nominal bitrate, data bitrate, BRS 사용 여부, M_CAN payload object size, Message RAM offset을 정의한다. object size를 64바이트로 바꿀 때 Rx/Tx 영역 overlap이 없는지 계산한다.
+4. `can_hal_spc584c70_fd.c`에서 M_CAN FD enable, data phase bit timing, Transceiver Delay Compensation 필요 여부, FDF/BRS bit 설정을 구현한다.
+5. CAN analyzer에서 BRS off FD frame부터 확인하고, 이후 BRS on으로 올린다. 12/16/20/24/32/48/64바이트 payload를 각각 송수신해 DLC/length 매핑을 확인한다.
+6. ISO-TP capacity 함수를 FD-aware로 바꾸고, UDS 장문 응답이 HS-CAN 대비 더 적은 frame으로 나가는지 trace로 확인한다.
+7. CCL Tx disable, BusOff, online/offline 정책이 Classical CAN과 CAN-FD frame 모두에 적용되는지 확인한다.
+8. 마지막에 HS-CAN baseline trace를 다시 재생해 CAN-FD 확장이 기존 Classical CAN 동작을 깨지 않았는지 확인한다.
+
+### SPC584C70 M_CAN FD 설정 체크리스트
+
+| 항목 | 설정/확인 내용 |
+|---|---|
+| FD enable | `CCCR.INIT=1`, `CCCR.CCE=1` 상태에서 `CCCR.FDOE=1` 설정 |
+| BRS enable | BRS 사용 variant에서 `CCCR.BRSE=1`, frame별 BRS bit 설정 |
+| nominal timing | `NBTP`가 HS-CAN arbitration bitrate와 일치 |
+| data timing | `DBTP`가 CAN-FD data phase bitrate와 일치 |
+| TDC | data bitrate와 transceiver loop delay를 기준으로 `TDCR`/TDC 사용 여부 결정 |
+| Rx element size | `RXESC`를 64-byte payload 수용 크기로 설정 |
+| Tx element size | `TXESC`를 64-byte payload 수용 크기로 설정 |
+| Message RAM | SID/XID filter, Rx FIFO/buffer, Tx buffer offset을 32-bit word 단위로 재계산 |
+| Tx request | FD element 기록 후 `TXBAR` request bit set 확인 |
+| 상태 확인 | `IR`, `PSR`, `ECR`에서 protocol error, BusOff, error passive 여부 확인 |
+
+### CAN-FD analyzer 단계표
+
+| 단계 | Analyzer 설정 | 기대 결과 |
+|---|---|---|
+| 1 | Classical CAN, BRS off | 9단계 HS-CAN baseline trace와 동일 |
+| 2 | CAN-FD, BRS off, 500 kbit/s nominal | 12/16/20/24/32/48/64 byte FD frame 수신 |
+| 3 | CAN-FD, BRS on, nominal/data bitrate 분리 | arbitration/data phase 모두 error 없이 수신 |
+| 4 | ISO-TP over FD | 30 byte 이상 UDS 응답 frame 수가 HS-CAN 대비 감소 |
+| 5 | 회귀 확인 | Classical CAN 메시지와 UDS 기본 서비스가 유지 |
 
 ## 적용 고려사항과 트러블슈팅
 

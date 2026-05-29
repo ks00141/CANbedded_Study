@@ -261,13 +261,6 @@ void AppDesc_SetCommModeFromUds(vuint8 control_type)
 }
 ```
 
-## 연습문제
-
-1. `Ccl_RequestCommunication()`이 중복 호출되어도 내부 상태가 꼬이지 않도록 구현하라.
-2. BusOff 상태에서는 사용자 요청이 있어도 CAN online으로 전환되지 않도록 테스트하라.
-3. `Ccl_IsTxEnabled()`가 0이면 `Can_Transmit()`이 실패하도록 CAN Driver와 연결하라.
-4. `CCL_USER_DIAG` 요청이 들어오면 sleep 진입을 막는 정책을 추가하라.
-5. CCL 상태 변화 시 애플리케이션 callback을 호출하도록 구현하라.
 
 ## 단계 산출물
 
@@ -277,9 +270,30 @@ void AppDesc_SetCommModeFromUds(vuint8 control_type)
 - `middleware/ccl/ccl.c`: Can/IL/TP/UDS/NM 초기화 순서와 상태 전파
 - `middleware/ccl/ccl_cfg.h`: 채널별 기능 사용 여부, 진단/NM 연동 정책
 - `examples/hs_can_middleware/main.c`: SPC584C70 HS-CAN middleware 통합 예제
-- `tests/integration/test_hs_can_stack.c`: mock 기반 전체 통합 테스트
+- `bringup/integration/hscan_stack_bringup.c`: 실제 보드에서 HS-CAN 전체 stack을 구동하는 통합 bring-up 코드
 
 이 단계를 완료하면 첫 번째 최종 결과물인 “SPC584C70 MCU에서 HS-CAN 통신이 가능한 미들웨어”의 baseline이 만들어져야 한다. 이후 CAN-FD 단계는 이 baseline을 깨지 않고 확장하는 방식으로 진행한다.
+
+## 구현 가이드
+
+1. `Ccl_Init()`에서 Common, Config, Can, IL, ISO-TP, UDS, NM 순으로 초기화한다. interrupt enable은 모든 buffer와 callback table이 준비된 뒤 수행한다.
+2. `Ccl_RequestCom()`과 `Ccl_ReleaseCom()`은 application, diagnostic, NM 요청을 분리해 관리한다. 하나라도 통신 요청이 있으면 online을 유지하고, 모든 요청이 해제되어야 offline 전환을 허용한다.
+3. `Ccl_SetTxAllowed()`와 `Ccl_SetRxAllowed()`를 만들어 IL periodic Tx, event Tx, TP/UDS response가 모두 같은 gate를 통과하게 한다.
+4. UDS `0x28 CommunicationControl`이 들어오면 CCL policy에 반영한다. 진단 요청이 일반 메시지 송신을 막아도 필요한 진단 응답은 OEM 정책에 맞게 허용/차단을 구분한다.
+5. 실제 보드에서 `Ccl_MainFunction()` 주기를 고정하고 CAN analyzer로 주기 메시지, 진단 응답, BusOff 복구 후 재송신 동작을 확인한다.
+6. 9단계 완료 산출물은 HS-CAN baseline이다. analyzer trace, map file, 설정 파일, 주요 register dump를 보관해 10단계 CAN-FD 전환의 회귀 기준으로 사용한다.
+
+### HS-CAN baseline acceptance matrix
+
+| 영역 | 확인 항목 | 완료 조건 |
+|---|---|---|
+| 주기 Tx | IL 주기 메시지 trace | ID, DLC, payload, period jitter가 설정 범위 안에 있음 |
+| Rx IL | 외부 analyzer 송신 frame 수신 | Rx buffer와 signal accessor 값이 기대값과 일치 |
+| ISO-TP | 8바이트 HS-CAN Multi-frame | FF/FC/CF 순서, SN rollover, timeout이 정상 |
+| UDS 기본 | `0x10`, `0x3E`, `0x22 F190` | positive response와 NRC 정책이 기대값과 일치 |
+| CommunicationControl | UDS `0x28` | CCL Tx/Rx gate가 IL/TP 송수신에 동일하게 적용 |
+| BusOff | 의도적 bus error 조건 | Tx 차단, 복구 timer, re-init, online 복귀가 동작 |
+| 회귀 자료 | trace/map/register dump | 10단계 CAN-FD 전환 전후 비교 기준으로 보관 |
 
 ## 적용 고려사항과 트러블슈팅
 

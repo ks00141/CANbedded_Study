@@ -16,7 +16,7 @@
 | 1 | 공통 타입, memory class, VStdLib | 모든 C 파일의 기본 include |
 | 2 | config header와 variant macro | 테이블 크기, 기능 enable, MCU 설정 |
 | 3 | CAN message handle, Tx/Rx config, buffer | CAN Driver와 IL이 공유 |
-| 4 | HS-CAN Driver, mock HAL, SPC584C70 HAL adapter interface | IL/TP/NM/CCL의 하위 송수신 API |
+| 4 | HS-CAN Driver, SPC584C70 M_CAN HAL adapter | IL/TP/NM/CCL의 하위 송수신 API |
 | 5 | IL signal accessor, periodic Tx scheduler | 애플리케이션 신호와 CAN Driver 연결 |
 | 6 | ISO-TP classic 상태 머신 | UDS request/response 전송 |
 | 7 | UDS dispatcher와 app callback | 진단 서비스 처리 |
@@ -39,7 +39,6 @@ middleware/
     can.c
     can_frame.h
     can_hal.h
-    can_hal_mock.c
     can_hal_spc584c70.c
     can_par.c
   il/
@@ -48,10 +47,15 @@ middleware/
   nm/
   ccl/
   app/
-tests/
-  unit/
-  integration/
-  vectors/
+bringup/
+  hscan_loopback/
+  hscan_bus_analyzer/
+  canfd_bus_analyzer/
+  uds_diagnostic/
+logs/
+  map_files/
+  analyzer_traces/
+  debugger_watch/
 ```
 
 ## HS-CAN 미들웨어 통합 조건
@@ -77,7 +81,16 @@ CAN-FD 산출물은 HS-CAN 조건을 모두 유지하면서 다음을 추가로 
 - BRS on/off variant를 설정할 수 있다.
 - ISO-TP over CAN-FD의 Single Frame capacity와 Consecutive Frame capacity가 설정 기반으로 계산된다.
 - UDS 계층은 CAN-FD 여부를 직접 알지 않고 TP payload만 처리한다.
-- HS-CAN 회귀 테스트가 CAN-FD 변경 후에도 통과한다.
+- HS-CAN 회귀 검증이 CAN-FD 변경 후에도 통과한다.
+
+## 단계별 구현 흐름
+
+1. 공통 타입과 메모리 추상화부터 만든 뒤, linker map에서 ROM/RAM 배치가 의도대로 되었는지 확인한다.
+2. 설정 계층에서 `SPC584C70` 보드의 M_CAN instance, pinmux, transceiver enable pin, nominal/data bitrate를 먼저 고정한다.
+3. CAN data model은 Classical CAN과 CAN-FD가 함께 쓸 수 있게 `dlc`와 `length`를 분리한다.
+4. CAN Driver는 처음부터 실제 M_CAN register, Message RAM, interrupt, transceiver 제어를 대상으로 bring-up한다.
+5. IL, ISO-TP, UDS, NM, CCL은 실제 CAN analyzer trace와 디버거 watch 값을 기준으로 단계별로 붙인다.
+6. 9단계 완료 시 HS-CAN 미들웨어 baseline을 만들고, 10단계에서 같은 구조를 CAN-FD로 확장한다.
 
 ## 통합 시 적용 고려사항
 
@@ -87,7 +100,7 @@ CAN-FD 산출물은 HS-CAN 조건을 모두 유지하면서 다음을 추가로 
 - ISR과 task 사이의 공유 buffer는 lock, queue, double buffer 중 하나로 보호한다.
 - UDS response buffer는 CAN-FD 전환 후 커질 수 있지만, RAM 사용량을 반드시 계산한다.
 - CAN-FD BRS를 켤 때는 transceiver와 네트워크 전체가 data phase bitrate를 지원해야 한다.
-- 모든 단계 산출물은 PC mock test와 MCU bring-up test를 분리한다.
+- 모든 단계 산출물은 `SPC584C70` 보드, 디버거, CAN/CAN-FD analyzer에서 확인 가능한 관찰 포인트를 가져야 한다.
 
 ## 공통 문제 케이스와 트러블슈팅
 
@@ -104,11 +117,11 @@ CAN-FD 산출물은 HS-CAN 조건을 모두 유지하면서 다음을 추가로 
 
 ## 권장 검증 순서
 
-1. PC mock에서 unit test를 모두 통과시킨다.
-2. mock CAN loopback으로 Driver, IL, ISO-TP, UDS를 통합한다.
-3. SPC584C70 보드에서 CAN controller loopback을 확인한다.
-4. CAN analyzer로 HS-CAN frame 송수신을 확인한다.
-5. BusOff와 CCL online/offline 정책을 확인한다.
-6. CAN-FD controller 설정과 FD payload length를 확인한다.
-7. ISO-TP over CAN-FD와 UDS 응답을 확인한다.
-8. HS-CAN 회귀 테스트를 다시 실행한다.
+1. SPC584C70 보드에서 clock, pinmux, transceiver enable, M_CAN reset 해제 상태를 디버거로 확인한다.
+2. M_CAN internal loopback으로 Tx/Rx interrupt와 Message RAM 배치를 확인한다.
+3. CAN analyzer로 HS-CAN frame 송수신을 확인한다.
+4. IL signal packing/unpacking 결과를 analyzer payload와 디버거 watch 값으로 비교한다.
+5. ISO-TP Single/Multi-frame과 UDS 기본 응답을 진단 장비 또는 CAN analyzer로 확인한다.
+6. BusOff와 CCL online/offline 정책을 실제 bus 오류 조건에서 확인한다.
+7. CAN-FD controller 설정, FD payload length, BRS on/off를 확인한다.
+8. CAN-FD 적용 후 HS-CAN baseline trace를 다시 비교한다.

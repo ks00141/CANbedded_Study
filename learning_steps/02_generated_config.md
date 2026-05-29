@@ -152,12 +152,6 @@ void Can_Init(void)
 }
 ```
 
-## 연습문제
-
-1. `MW_ENABLE_ISOTP`가 정의된 경우에만 `IsoTp_Init()` 호출 코드가 컴파일되도록 작성하라.
-2. `MW_NUM_CAN_TX_OBJECTS` 값을 4로 바꿨을 때 Tx 설정 테이블 크기도 같이 바뀌도록 구현하라.
-3. `MW_CAN_USE_EXTENDED_ID`가 0이면 29비트 ID 송신을 거부하는 코드를 작성하라.
-4. 설정 파일을 `project_a`와 `project_b`로 나누고, 같은 구현 코드가 다른 설정으로 컴파일되게 구성하라.
 
 ## 단계 산출물
 
@@ -167,9 +161,17 @@ void Can_Init(void)
 - `middleware/config/can_cfg.h`: 채널 수, Tx/Rx object 수, ID 타입, queue 사용 여부, Classical CAN/CAN-FD 사용 여부
 - `middleware/config/can_par.h`, `middleware/config/can_par.c`: Tx/Rx message object, filter, baudrate, callback table
 - `tools/config_schema.md`: 사람이 설정 파일을 작성할 때 지켜야 할 필드 규칙
-- `tests/config/test_config_size.c`: 설정값과 테이블 크기가 일치하는지 검증하는 테스트
+- `bringup/config/config_bringup.c`: 설정값, 테이블 크기, M_CAN instance 선택값을 디버거로 확인하는 bring-up 코드
 
 HS-CAN 결과물은 `MW_CAN_USE_FD == 0`인 설정 variant로 생성하고, CAN-FD 결과물은 `MW_CAN_USE_FD == 1` 및 메시지별 FD/BRS/length 정책을 포함한 variant로 생성한다. 두 variant는 같은 구현 코드를 공유하고 설정 파일만 다르게 가져가는 구성이 목표다.
+
+## 구현 가이드
+
+1. `mw_variant.h`에서 `MW_VARIANT_HSCAN`, `MW_VARIANT_CANFD`, `MW_TARGET_SPC584C70`, `MW_CPU_COMPUTING_CORE_COUNT`를 정의한다. 빌드 로그에서 실제 variant가 무엇인지 확인할 수 있도록 `MW_CONFIG_VARIANT_NAME`도 둔다.
+2. `spc584c70_clock_cfg.h`에 M_CAN host clock, protocol clock, nominal bitrate, CAN-FD data bitrate, sample point 목표값을 정리한다. `TN1346` 계산 결과를 설정 주석에 남겨 이후 Driver 초기화 값과 추적 가능하게 만든다.
+3. `can_cfg.h`에는 software channel 수와 M_CAN instance 번호를 분리해 둔다. 예를 들어 channel 0이 M_CAN1을 쓰더라도 `MW_CAN0_MCAN_INSTANCE`처럼 명시한다.
+4. `can_par.c`에는 Tx/Rx handle, CAN ID, ID type, expected length, FD 여부, BRS 여부, callback pointer를 테이블로 작성한다. 테이블 길이는 `MW_NUM_CAN_TX_OBJECTS`, `MW_NUM_CAN_RX_OBJECTS`와 compile-time assert로 묶는다.
+5. 보드 bring-up에서 디버거로 `CanTxConfig[]`, `CanRxConfig[]`, clock 설정 구조체, variant macro 결과를 확인한다. 설정값이 틀리면 이후 Driver 계층에서 원인을 찾기 어려우므로 이 단계에서 고정한다.
 
 ## 적용 고려사항과 트러블슈팅
 

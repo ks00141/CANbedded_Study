@@ -144,6 +144,7 @@ void Uds_OnRequest(const vuint8 *data, vuint16 length);
 
 ```c
 #include "uds.h"
+#include "vstdlib.h"
 
 static vuint8 g_uds_response[256];
 
@@ -196,6 +197,47 @@ static vuint8 Uds_HandleTesterPresent(const vuint8 *req, vuint16 req_len,
     return 0u;
 }
 
+static const vuint8 kVinF190[17] =
+{
+    'S','P','C','5','8','4','C','7','0','S','T','U','D','Y','0','0','1'
+};
+
+static vuint8 AppDesc_ReadDidF190(vuint8 *data, vuint16 *length)
+{
+    VStdRamMemCpy(data, kVinF190, 17u);
+    *length = 17u;
+    return 0u;
+}
+
+static vuint8 Uds_HandleReadDataByIdentifier(const vuint8 *req, vuint16 req_len,
+                                             vuint8 *res, vuint16 *res_len)
+{
+    vuint16 did;
+    vuint16 did_len;
+
+    if (req_len != 3u)
+    {
+        return UDS_NRC_INCORRECT_LENGTH;
+    }
+
+    did = (vuint16)(((vuint16)req[1] << 8) | req[2]);
+    if (did != 0xF190u)
+    {
+        return UDS_NRC_SERVICE_NOT_SUPPORTED;
+    }
+
+    res[0] = 0x62u;
+    res[1] = req[1];
+    res[2] = req[2];
+    if (AppDesc_ReadDidF190(&res[3], &did_len) != 0u)
+    {
+        return UDS_NRC_SERVICE_NOT_SUPPORTED;
+    }
+
+    *res_len = (vuint16)(3u + did_len);
+    return 0u;
+}
+
 void Uds_OnRequest(const vuint8 *data, vuint16 length)
 {
     vuint8 sid;
@@ -217,6 +259,9 @@ void Uds_OnRequest(const vuint8 *data, vuint16 length)
     case 0x3Eu:
         nrc = Uds_HandleTesterPresent(data, length, g_uds_response, &res_len);
         break;
+    case 0x22u:
+        nrc = Uds_HandleReadDataByIdentifier(data, length, g_uds_response, &res_len);
+        break;
     default:
         Uds_SendNegativeResponse(sid, UDS_NRC_SERVICE_NOT_SUPPORTED);
         return;
@@ -233,13 +278,6 @@ void Uds_OnRequest(const vuint8 *data, vuint16 length)
 }
 ```
 
-## 연습문제
-
-1. `0x22 ReadDataByIdentifier` handler를 추가하고 DID `0xF190`에 대해 임의 VIN 데이터를 반환하라.
-2. `0x27 SecurityAccess`의 seed 요청과 key 요청을 분리해 처리하라.
-3. 현재 session이 extended session이 아닐 때 특정 DID 요청을 NRC `0x31`로 거부하라.
-4. suppress positive response bit가 설정된 `3E 80` 요청에 대해 positive response를 보내지 않도록 구현하라.
-5. service table 구조체를 만들고 switch문 대신 테이블 lookup 방식으로 dispatcher를 구현하라.
 
 ## 단계 산출물
 
@@ -249,9 +287,18 @@ void Uds_OnRequest(const vuint8 *data, vuint16 length)
 - `middleware/diag/uds.c`: SID별 handler 호출, positive/negative response 생성, session/security 상태 관리
 - `middleware/diag/candesc.h`, `middleware/diag/candesc.c`: DID, RID, IO control, routine callback table
 - `middleware/diag/uds_cfg.h`: 지원 service, session timeout, response buffer 크기 설정
-- `tests/diag/test_uds_services.c`: `0x10`, `0x22`, `0x2E`, `0x31` 등 기본 service 테스트
+- `bringup/diag/uds_service_bringup.c`: 진단 장비 또는 CAN analyzer로 기본 service 응답을 확인하는 bring-up 코드
 
 HS-CAN 결과물에서는 큰 응답이 ISO-TP segmentation을 통해 정상 전달되어야 한다. CAN-FD 결과물에서는 UDS handler 자체는 frame format을 몰라도 되고, TP 계층이 제공하는 payload stream만 처리하도록 유지해야 한다.
+
+## 구현 가이드
+
+1. `uds_cfg.h`에 지원 SID, session, security level, response buffer 크기, S3 timeout을 정의한다.
+2. `uds.c`는 TP가 완성한 request payload를 받아 SID dispatch table로 handler를 호출한다. handler는 positive response payload 또는 NRC를 반환하는 단일 규칙을 따른다.
+3. `candesc.c`에는 DID/RID와 application callback table을 둔다. DID length, session 조건, security 조건을 callback과 분리해 테이블에서 먼저 검사한다.
+4. `0x10 DiagnosticSessionControl`, `0x3E TesterPresent`, `0x22 ReadDataByIdentifier`를 우선 구현한다. 이후 `0x2E`, `0x31`, `0x28`을 추가한다.
+5. 진단 장비에서 요청을 보내고 CAN analyzer로 TP frame과 UDS payload를 함께 확인한다. UDS core는 CAN frame format을 직접 보지 않고 TP payload만 보도록 유지한다.
+6. flash write, reset, NVM access는 UDS core에 직접 넣지 말고 `AppDiag_*` adapter로 분리한다. 실제 동작은 보드 안전 조건과 session/security 조건을 만족할 때만 활성화한다.
 
 ## 적용 고려사항과 트러블슈팅
 

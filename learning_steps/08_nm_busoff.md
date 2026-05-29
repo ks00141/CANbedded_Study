@@ -172,13 +172,6 @@ NmState NmBasic_GetState(void)
 }
 ```
 
-## 연습문제
-
-1. BusOff 복구 성공 후 일정 시간 동안 BusOff가 다시 발생하지 않으면 `g_busoff_count`를 0으로 초기화하라.
-2. BusOff 시작/종료 시 애플리케이션 callback을 호출하도록 구현하라.
-3. `NM_STATE_STOPPED` 상태에서는 BusOff callback이 들어와도 복구하지 않도록 처리하라.
-4. 빠른 복구와 느린 복구 시간을 설정 파일에서 가져오도록 바꿔라.
-5. 복구 횟수와 현재 상태를 읽는 debug API를 추가하라.
 
 ## 단계 산출물
 
@@ -187,9 +180,32 @@ NmState NmBasic_GetState(void)
 - `middleware/nm/nm_basic.h`, `middleware/nm/nm_basic.c`: online/offline/sleep 준비 상태 관리
 - `middleware/nm/busoff.h`, `middleware/nm/busoff.c`: BusOff 감지, 통신 차단, 복구 타이머, 재초기화 요청
 - `middleware/nm/nm_cfg.h`: channel별 복구 지연, 최대 재시도, 알림 callback 설정
-- `tests/nm/test_busoff_recovery.c`: BusOff 진입/복구/반복 실패 테스트
+- `bringup/nm/busoff_recovery_bringup.c`: 실제 BusOff 진입, 복구, 반복 실패를 확인하는 bring-up 코드
 
 HS-CAN 결과물에서는 BusOff가 발생하면 Tx를 막고, 정해진 정책에 따라 controller를 복구한 뒤 online으로 돌아와야 한다. CAN-FD 결과물에서도 BusOff 의미는 동일하므로 frame format과 무관하게 channel 상태 정책을 공유해야 한다.
+
+## 구현 가이드
+
+1. Driver에서 BusOff interrupt 또는 error state 변화를 감지하면 `Nm_BusOffIndication(channel)`을 호출하도록 연결한다.
+2. NM 상태는 Online, BusOff, RecoverWait, Recovering, LockedOffline 정도로 나눈다. 각 상태에서 Tx 허용 여부와 복구 timer 동작을 명확히 정의한다.
+3. BusOff 진입 시 CCL과 Driver Tx gate를 즉시 닫고, pending Tx queue를 flush할지 보류할지 정책을 결정한다.
+4. 복구 timer 만료 후 M_CAN re-init sequence를 실행하고, error counter와 controller state가 정상인지 확인한 뒤 online으로 전환한다.
+5. 실제 보드에서 bitrate mismatch, termination 제거, transceiver disable 등 통제 가능한 조건으로 BusOff를 유도한다. CAN analyzer와 디버거로 TEC/REC, BusOff flag, NM state를 함께 기록한다.
+6. 반복 BusOff가 발생하면 재시도 횟수를 제한하고 locked offline 또는 service required 상태로 전환한다.
+
+### M_CAN BusOff 복구 체크리스트
+
+| 단계 | 확인 항목 | 완료 조건 |
+|---|---|---|
+| BusOff 감지 | `IR.BO`, `PSR.BO`, `ECR.TEC` 관찰 | Driver가 `Nm_BusOffIndication()` 호출 |
+| Tx 차단 | CCL Tx gate, Driver online flag | application/IL/TP 송신 요청이 거부됨 |
+| pending 처리 | Tx queue flush 또는 보류 정책 | 재초기화 후 중복 송신이 발생하지 않음 |
+| 재초기화 | `CCCR.INIT/CCE`, bit timing, Message RAM, filter 복원 | M_CAN normal mode 재진입 |
+| 복구 판정 | `PSR`, `ECR`, analyzer bus 상태 | error active 또는 정상 송수신 가능 |
+| CCL 해제 | recover success notification | CCL inhibit 해제 후 주기 Tx 재개 |
+| 반복 실패 | retry counter | 한계 초과 시 locked offline 유지 |
+
+복구 완료 기준은 단순히 BusOff flag가 내려간 상태가 아니라, analyzer에서 정상 frame 송수신이 재개되고 CCL online 상태가 일관되게 복구된 상태이다.
 
 ## 적용 고려사항과 트러블슈팅
 

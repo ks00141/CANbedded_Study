@@ -67,7 +67,7 @@ CAN Driver는 프로토콜을 해석하지 않는다. Driver가 알아야 하는
 - BusOff/error state interrupt 처리
 - controller freeze/init/normal mode 전환
 
-학습용 PC mock에서는 이 모든 것을 생략할 수 있지만, Driver API는 나중에 이 정보가 들어올 자리를 남겨두어야 한다. 예를 들어 `Can_Init()`이 아무 인자 없이 동작하더라도 내부적으로는 `CanControllerConfig` 테이블을 읽는 구조가 좋다.
+이 단계는 실제 `SPC584C70` 보드에서 수행한다. `Can_Init()`이 아무 인자 없이 동작하더라도 내부적으로는 `CanControllerConfig` 테이블을 읽고, 해당 M_CAN instance의 clock, Message RAM, filter, interrupt를 초기화하는 구조가 좋다.
 
 ### Tx 경로의 핵심 상태
 
@@ -204,7 +204,7 @@ vuint8 Can_Transmit(CanTxHandle tx)
     }
 
     /*
-     * 학습용 mock:
+     * 초기 bring-up:
      * 실제 구현에서는 여기서 CAN HAL 송신 함수 또는 레지스터를 호출한다.
      */
 
@@ -246,13 +246,6 @@ void Can_TestForceBusOff(void)
 }
 ```
 
-## 연습문제
-
-1. `Can_Transmit()`에서 Tx handle 범위 오류, offline 오류, DLC 오류를 서로 다른 return code로 구분하라.
-2. 수신 ID가 테이블에 없을 때 호출되는 `CanNotMatchedCallback`을 추가하라.
-3. Tx confirmation flag 배열을 만들고, 송신 완료 시 해당 flag를 1로 설정하라.
-4. 송신 큐를 간단한 ring buffer로 구현하라.
-5. BusOff 발생 후에는 송신 요청이 실패하도록 구현하라.
 
 ## 단계 산출물
 
@@ -261,11 +254,36 @@ void Can_TestForceBusOff(void)
 - `middleware/can/can.h`: `Can_Init`, `Can_Write`, `Can_MainFunction`, callback API
 - `middleware/can/can.c`: 상태 관리, Tx queue, Rx dispatch, BusOff 감지 연결
 - `middleware/can/can_hal.h`: SPC584C70 레지스터 접근을 감추는 HAL 인터페이스
-- `middleware/can/can_hal_mock.c`: PC 테스트용 mock HAL
 - `middleware/can/can_hal_spc584c70.c`: SPC584C70 HS-CAN용 HAL skeleton
-- `tests/can/test_can_driver.c`: Tx/Rx/queue/error 상태 테스트
+- `bringup/can/hscan_bringup.c`: internal loopback, analyzer 송수신, BusOff 관찰용 bring-up 코드
 
-HS-CAN 미들웨어의 첫 번째 동작 목표는 `Can_Init -> Can_Write -> Tx confirmation -> Rx indication` 흐름이 mock과 보드에서 모두 확인되는 것이다. CAN-FD 미들웨어에서는 같은 API로 FD frame을 보낼 수 있도록 `CanFrame` format 정보를 HAL까지 전달해야 한다.
+HS-CAN 미들웨어의 첫 번째 동작 목표는 `Can_Init -> Can_Write -> Tx confirmation -> Rx indication` 흐름이 실제 보드와 CAN analyzer에서 확인되는 것이다. CAN-FD 미들웨어에서는 같은 API로 FD frame을 보낼 수 있도록 `CanFrame` format 정보를 HAL까지 전달해야 한다.
+
+## 구현 가이드
+
+1. `can_hal_spc584c70.c`에서 M_CAN module clock enable, reset 해제, INIT/CCE 진입, nominal bit timing 설정, Message RAM 영역 초기화를 구현한다.
+2. `CanControllerConfig`에 M_CAN instance 번호, Message RAM base/offset, Rx FIFO 크기, Tx buffer 수, interrupt line, transceiver enable GPIO를 넣는다.
+3. acceptance filter를 먼저 최소 1개 ID로 설정한다. ST 예제처럼 filter가 없으면 수신 buffer에 저장되지 않을 수 있으므로, Rx path 확인 전 filter table을 먼저 검증한다.
+4. internal loopback으로 Tx request bit, Tx complete interrupt, Rx FIFO new message flag를 디버거로 확인한다. 이후 external mode로 전환해 CAN analyzer에서 동일 ID/DLC/payload를 확인한다.
+5. `Can_Write()`는 CCL online 상태, handle 범위, frame validation, mailbox busy 상태를 순서대로 검사한다. 실패 원인은 return code 또는 debug counter로 남겨 bring-up 중 즉시 구분 가능하게 한다.
+6. BusOff는 analyzer 또는 transceiver 조건을 이용해 유도하고, error counter, interrupt flag, Driver state 전환을 확인한다.
+
+### SPC584C70 M_CAN bring-up 체크리스트
+
+| 순서 | 확인 항목 | 구현/관찰 포인트 |
+|---|---|---|
+| 1 | clock/pinmux/transceiver | M_CAN host/protocol clock enable, TX/RX pin alternate function, transceiver standby 해제 |
+| 2 | INIT/설정 진입 | `CCCR.INIT=1`, `CCCR.CCE=1` 상태에서 bit timing과 Message RAM 설정 |
+| 3 | nominal timing | `NBTP` 값이 목표 bitrate/sample point와 일치하는지 계산표와 비교 |
+| 4 | filter base | `SIDFC`, `XIDFC`, `RXGFC` 설정 후 수신 ID가 filter에 매칭되는지 확인 |
+| 5 | Rx 영역 | `RXF0C` 또는 Rx buffer 설정, `RXESC` payload size, Message RAM offset overlap 확인 |
+| 6 | Tx 영역 | `TXBC`, `TXESC`, Tx element payload size, `TXBAR` request bit 확인 |
+| 7 | interrupt | `IR` flag clear, `IE`, `ILS`, `ILE`, INTC vector 연결, ISR 진입 확인 |
+| 8 | 상태 레지스터 | `PSR`, `ECR`, last error code, error passive, BusOff flag 확인 |
+| 9 | Message RAM/ECC | reset 후 Message RAM 초기화, ECC error flag가 없는지 확인 |
+| 10 | analyzer 확인 | analyzer ID/DLC/payload와 내부 `CanFrame` 값 비교 |
+
+이 표는 bring-up 로그의 기준으로 사용한다. 각 단계가 끝날 때 register dump와 analyzer trace를 저장하면 이후 CAN-FD 전환 시 회귀 비교가 쉬워진다.
 
 ## 적용 고려사항과 트러블슈팅
 
@@ -278,11 +296,11 @@ SPC584C70에서 Driver 구현 시에는 CAN module clock enable, soft reset, bit
 | BusOff 후 복구되지 않음 | controller reset/recovery sequence 누락 | BusOff 상태 진입, offline 전환, 재초기화, online 복귀 단계를 상태도로 검증한다. |
 | CAN-FD frame 송신 실패 | payload size 설정 또는 FD enable 누락 | message buffer payload size, FDF/BRS bit, data phase timing 설정을 확인한다. |
 
-Driver 문제는 PC mock 테스트만으로 끝나지 않는다. 보드에서는 “레지스터 설정 dump -> Tx mailbox pending bit -> interrupt flag -> analyzer frame” 순서로 좁혀가며 확인한다.
+Driver 문제는 “레지스터 설정 dump -> Tx mailbox pending bit -> interrupt flag -> analyzer frame” 순서로 좁혀가며 확인한다.
 
 ## 완료 기준
 
-- Tx handle만으로 CAN 송신 mock이 가능하다.
+- Tx handle만으로 실제 M_CAN 송신 요청을 만들 수 있다.
 - 수신 ID를 Rx handle로 매핑할 수 있다.
 - Rx callback과 Tx callback을 통해 상위 계층이 연결된다.
 - BusOff callback을 NM 단계에서 사용할 수 있다.
