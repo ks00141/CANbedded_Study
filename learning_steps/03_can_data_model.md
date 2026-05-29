@@ -68,7 +68,7 @@ CanTxConfirmation[handle]
 
 ### 신호 layout과 endian
 
-CAN payload 안의 신호는 byte 단위 또는 bit 단위로 배치된다. 예를 들어 32비트 위치값이 byte 0~3에 little-endian으로 들어갈 수도 있고, big-endian bit numbering으로 들어갈 수도 있다. 타깃이 `SPC58EC70`처럼 Power Architecture 계열이고 기존 설정이 big-endian 계열인 경우에도, CAN 신호 layout은 CPU endian과 별개로 DBC가 정의한 byte order를 따라야 한다.
+CAN payload 안의 신호는 byte 단위 또는 bit 단위로 배치된다. 예를 들어 32비트 위치값이 byte 0~3에 little-endian으로 들어갈 수도 있고, big-endian bit numbering으로 들어갈 수도 있다. 타깃이 `SPC584C70`처럼 Power Architecture 계열이고 기존 설정이 big-endian 계열인 경우에도, CAN 신호 layout은 CPU endian과 별개로 DBC가 정의한 byte order를 따라야 한다.
 
 따라서 안전한 방식은 다음과 같다.
 

@@ -4,8 +4,8 @@
 
 이 학습자료를 따라 구현하면 최종적으로 두 가지 미들웨어 산출물이 만들어져야 한다.
 
-1. `SPC58EC70` MCU에서 HS-CAN/Classical CAN 통신이 가능한 미들웨어
-2. `SPC58EC70` MCU에서 CAN-FD 통신이 가능한 미들웨어
+1. `SPC584C70` MCU에서 HS-CAN/Classical CAN 통신이 가능한 미들웨어
+2. `SPC584C70` MCU에서 CAN-FD 통신이 가능한 미들웨어
 
 두 산출물은 서로 다른 프로젝트가 아니라 같은 아키텍처에서 나온 variant로 관리한다. 공통 계층, UDS, CCL, NM, IL 대부분은 공유하고, CAN Driver 설정, frame model, ISO-TP frame capacity, CAN-FD DLC/BRS 처리만 variant별로 달라지게 하는 것이 목표이다.
 
@@ -16,7 +16,7 @@
 | 1 | 공통 타입, memory class, VStdLib | 모든 C 파일의 기본 include |
 | 2 | config header와 variant macro | 테이블 크기, 기능 enable, MCU 설정 |
 | 3 | CAN message handle, Tx/Rx config, buffer | CAN Driver와 IL이 공유 |
-| 4 | HS-CAN Driver, mock HAL, SPC58EC70 HAL adapter interface | IL/TP/NM/CCL의 하위 송수신 API |
+| 4 | HS-CAN Driver, mock HAL, SPC584C70 HAL adapter interface | IL/TP/NM/CCL의 하위 송수신 API |
 | 5 | IL signal accessor, periodic Tx scheduler | 애플리케이션 신호와 CAN Driver 연결 |
 | 6 | ISO-TP classic 상태 머신 | UDS request/response 전송 |
 | 7 | UDS dispatcher와 app callback | 진단 서비스 처리 |
@@ -31,7 +31,7 @@ middleware/
   common/
   config/
     mw_variant.h
-    spc58ec70_clock_cfg.h
+    spc584c70_clock_cfg.h
     can_cfg_hscan.h
     can_cfg_canfd.h
   can/
@@ -40,7 +40,7 @@ middleware/
     can_frame.h
     can_hal.h
     can_hal_mock.c
-    can_hal_spc58ec70.c
+    can_hal_spc584c70.c
     can_par.c
   il/
   isotp/
@@ -81,7 +81,8 @@ CAN-FD 산출물은 HS-CAN 조건을 모두 유지하면서 다음을 추가로 
 
 ## 통합 시 적용 고려사항
 
-- `SPC58EC70`은 8개 M_CAN 기반 ISO CAN-FD 인터페이스를 제공하므로 HAL adapter는 M_CAN instance, shared Message RAM offset, interrupt line을 설정으로 받는다.
+- `SPC584C70`은 8개 M_CAN 기반 ISO CAN-FD 인터페이스를 제공하므로 HAL adapter는 M_CAN instance, shared Message RAM offset, interrupt line을 설정으로 받는다.
+- `SPC58EC70`과 CAN-FD 주변장치 설명은 유사하지만, `SPC584C70`의 single computing core 전제에 맞춰 startup, linker, RAM map, interrupt target을 별도로 검증한다.
 - peripheral clock과 CAN bit timing은 코드에 하드코딩하지 않고 설정 구조체로 관리한다.
 - ISR과 task 사이의 공유 buffer는 lock, queue, double buffer 중 하나로 보호한다.
 - UDS response buffer는 CAN-FD 전환 후 커질 수 있지만, RAM 사용량을 반드시 계산한다.
@@ -105,7 +106,7 @@ CAN-FD 산출물은 HS-CAN 조건을 모두 유지하면서 다음을 추가로 
 
 1. PC mock에서 unit test를 모두 통과시킨다.
 2. mock CAN loopback으로 Driver, IL, ISO-TP, UDS를 통합한다.
-3. SPC58EC70 보드에서 CAN controller loopback을 확인한다.
+3. SPC584C70 보드에서 CAN controller loopback을 확인한다.
 4. CAN analyzer로 HS-CAN frame 송수신을 확인한다.
 5. BusOff와 CCL online/offline 정책을 확인한다.
 6. CAN-FD controller 설정과 FD payload length를 확인한다.

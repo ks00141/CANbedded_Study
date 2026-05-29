@@ -44,14 +44,17 @@ CBD의 `Gen` 폴더는 바로 이 역할을 한다. `can_cfg.h`는 CAN Driver의
 
 초보 구현에서 자주 하는 실수는 이 둘을 섞는 것이다. 예를 들어 `MW_NUM_CAN_TX_OBJECTS`는 compile-time 설정이고, `Can_SetOffline()`은 run-time 상태 변경이다. 구조체와 매크로 이름에서 이 둘을 명확히 구분하면 코드가 훨씬 읽기 쉬워진다.
 
-### SPC58EC70 적용 관점
+### SPC584C70 적용 관점
 
-`SPC58EC70`에서는 설정 계층이 MCU 주변장치 초기화와 직접 연결된다. 이 MCU는 8개 Bosch M_CAN 기반 ISO CAN-FD 인터페이스를 제공하며 두 CAN subsystem 안에서 Message RAM, clock, ECC 자원을 공유한다. 따라서 M_CAN 인스턴스 번호, shared Message RAM offset, interrupt vector, host/protocol clock, CAN bit timing, payload size, filter table 크기를 모두 설정값으로 관리하는 편이 좋다.
+`SPC584C70`에서는 설정 계층이 MCU 주변장치 초기화와 직접 연결된다. 이 MCU는 8개 Bosch M_CAN 기반 ISO CAN-FD 인터페이스를 제공하며 두 CAN subsystem 안에서 Message RAM, clock, ECC 자원을 공유한다. 따라서 M_CAN 인스턴스 번호, shared Message RAM offset, interrupt vector, host/protocol clock, CAN bit timing, payload size, filter table 크기를 모두 설정값으로 관리하는 편이 좋다.
+
+`SPC58EC70`과 CAN-FD 주변장치 설명은 상당 부분 공유할 수 있지만, 설정 파일에서는 두 MCU를 같은 타깃으로 취급하지 않는다. `SPC584C70`은 single computing core 계열이므로 startup core, linker memory map, interrupt target core, core-local RAM 설정을 `SPC58EC70` dual-core 설정에서 그대로 가져오면 안 된다.
 
 예를 들어 학습용 설정에는 처음에 다음 정도만 있어도 된다.
 
 ```c
-#define MW_TARGET_SPC58EC70 1u
+#define MW_TARGET_SPC584C70 1u
+#define MW_CPU_COMPUTING_CORE_COUNT 1u
 #define MW_MCAN_INSTANCE_COUNT 8u
 #define MW_CAN_CONTROLLER_COUNT 1u
 #define MW_CAN0_MCAN_INSTANCE 1u
@@ -61,7 +64,7 @@ CBD의 `Gen` 폴더는 바로 이 역할을 한다. `can_cfg.h`는 CAN Driver의
 #define MW_CANFD_DATA_BITRATE 2000000u
 ```
 
-실제 포팅 단계에서는 이 값들이 SPC58EC70의 clock tree와 CAN controller timing register 설정으로 연결된다. 따라서 설정 파일은 단순 숫자 모음이 아니라 “생성 코드와 하드웨어 초기화 사이의 계약서”로 보아야 한다.
+실제 포팅 단계에서는 이 값들이 SPC584C70의 clock tree와 CAN controller timing register 설정으로 연결된다. 따라서 설정 파일은 단순 숫자 모음이 아니라 “생성 코드와 하드웨어 초기화 사이의 계약서”로 보아야 한다.
 
 ### 설정 설계 원칙
 
@@ -170,13 +173,13 @@ HS-CAN 결과물은 `MW_CAN_USE_FD == 0`인 설정 variant로 생성하고, CAN-
 
 ## 적용 고려사항과 트러블슈팅
 
-설정 계층은 이후 모든 계층의 compile-time contract 역할을 한다. SPC58EC70 보드에서는 CAN clock source, M_CAN instance, shared Message RAM 영역, pin mux, transceiver enable pin 같은 하드웨어 조건도 설정의 일부로 다루어야 한다.
+설정 계층은 이후 모든 계층의 compile-time contract 역할을 한다. SPC584C70 보드에서는 CAN clock source, M_CAN instance, shared Message RAM 영역, pin mux, transceiver enable pin 같은 하드웨어 조건도 설정의 일부로 다루어야 한다.
 
 | 문제 케이스 | 원인 | 확인/대응 |
 |---|---|---|
 | Tx object 수를 바꿨더니 런타임에서 배열 범위를 벗어남 | 매크로와 설정 테이블 길이 불일치 | `MW_NUM_CAN_TX_OBJECTS`와 `CanTxConfig[]` 길이를 compile-time assert로 묶는다. |
 | HS-CAN 빌드에 CAN-FD 필드가 섞여 빌드 오류 발생 | variant 분리 기준이 불명확 | Classical 공용 필드와 FD 전용 필드를 구조체/매크로로 명확히 분리한다. |
-| 보드에서 통신 속도가 맞지 않음 | SPC58EC70 CAN clock, prescaler, sample point 계산 오류 | clock tree와 CAN nominal/data bit timing 계산표를 설정 문서에 함께 남긴다. |
+| 보드에서 통신 속도가 맞지 않음 | SPC584C70 CAN clock, prescaler, sample point 계산 오류 | clock tree와 CAN nominal/data bit timing 계산표를 설정 문서에 함께 남긴다. |
 | 프로젝트 A 설정이 프로젝트 B 빌드에 섞임 | include path 우선순위 오류 | variant별 config 디렉터리를 만들고 빌드 로그에서 include 경로 순서를 확인한다. |
 
 트러블슈팅은 먼저 “현재 빌드가 어떤 variant 설정을 include했는지” 확인하는 것부터 시작한다. 설정 헤더에 `MW_CONFIG_VARIANT_NAME` 문자열 또는 매크로를 두면 로그와 map 파일에서 추적하기 쉽다.
