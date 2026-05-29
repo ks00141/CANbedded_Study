@@ -2,9 +2,9 @@
 
 ## 1. 목표
 
-이 로드맵의 목표는 `src/CBD`에 포함된 Vector CANbedded 계열 미들웨어 묶음을 학습하여, 동일한 구조의 C 언어 기반 미들웨어를 단계적으로 재구현할 수 있는 이해 순서와 구현 순서를 잡는 것이다. 재구현 학습의 타깃 MCU는 STMicroelectronics `SPC58xC` 시리즈로 설정한다.
+이 로드맵의 목표는 `src/CBD`에 포함된 Vector CANbedded 계열 미들웨어 묶음을 학습하여, 동일한 구조의 C 언어 기반 미들웨어를 단계적으로 재구현할 수 있는 이해 순서와 구현 순서를 잡는 것이다. 재구현 학습의 타깃 MCU는 STMicroelectronics `SPC58EC70` MCU로 설정한다.
 
-`SPC58xC`는 차량용 32-bit Power Architecture 계열 MCU 제품군으로, 파생 제품에 따라 CAN/CAN-FD 컨트롤러, 자동차용 안전/진단 기능, 플래시/RAM, 타이머, 인터럽트 컨트롤러, 시스템 보호 기능을 제공한다. 따라서 학습용 미들웨어는 PC mock 환경에서 먼저 구현하되, 최종 구조는 `SPC58xC`의 CAN-FD 가능 CAN 컨트롤러, interrupt vector, big-endian/정렬 이슈, 메모리 배치, peripheral clock 설정을 고려해 설계한다.
+`SPC58EC70`은 ST의 SPC58 C Line/SPC58ECx 계열에 속하는 차량용 32-bit Power Architecture MCU이다. 공식 ST 제품 정보와 RM0407 기준으로, SPC58ECx 계열은 e200z420n3 듀얼 코어(최대 180 MHz), HSM 내부 e200z0 코어, VLE 명령 집합, 그리고 shared Message RAM 구조의 8개 M_CAN 인터페이스와 ISO CAN-FD 지원을 제공한다. AN5416 기준으로 M_CAN은 두 subsystem으로 나뉘며 subsystem 안에서 Message RAM, clock, ECC 자원을 공유하므로 offset overlap을 피해야 한다. Flash/RAM 용량은 주문 코드와 Flash option에 따라 달라질 수 있으므로 DS11620의 ordering information을 기준으로 확정하고, 학습용 미들웨어 코드에는 고정 용량을 하드코딩하지 않는다. 따라서 학습용 미들웨어는 PC mock 환경에서 먼저 구현하되, 최종 구조는 `SPC58EC70`의 M_CAN 기반 CAN-FD 컨트롤러, interrupt vector, Power Architecture endian/정렬 이슈, 메모리 배치, peripheral clock 설정을 고려해 설계한다.
 
 대상 미들웨어는 다음 계층으로 구성된다.
 
@@ -32,8 +32,8 @@ MCU / CAN Hardware
 
 이 로드맵을 끝까지 수행했을 때의 최종 결과물은 다음 두 가지 동작 가능한 미들웨어이다.
 
-1. `SPC58xC` 시리즈 MCU에서 HS-CAN/Classical CAN 통신이 가능한 미들웨어
-2. `SPC58xC` 시리즈 MCU에서 CAN-FD 통신이 가능한 미들웨어
+1. `SPC58EC70` MCU에서 HS-CAN/Classical CAN 통신이 가능한 미들웨어
+2. `SPC58EC70` MCU에서 CAN-FD 통신이 가능한 미들웨어
 
 각 학습 단계는 단순 지식 습득으로 끝나지 않고, 다음 단계가 참조할 수 있는 코드/설정/테스트 산출물을 남기는 것을 원칙으로 한다. 1~9단계 산출물을 통합하면 HS-CAN 미들웨어가 되고, 10단계 산출물을 추가 적용하면 CAN-FD 미들웨어가 된다.
 
@@ -61,7 +61,7 @@ MCU / CAN Hardware
 | 1 | `middleware/common`, 공통 타입/메모리/인터럽트 유틸 | 모든 계층의 기반 타입과 보호 구간 |
 | 2 | `middleware/config`, 프로젝트 설정 헤더 | HS-CAN/CAN-FD 빌드 옵션과 정적 크기 결정 |
 | 3 | `middleware/can/can_par.*`, 메시지/신호 버퍼 | CAN Driver와 IL이 공유하는 메시지 데이터 모델 |
-| 4 | `middleware/can/can.*`, SPC58xC CAN HAL adapter | HS-CAN 송수신, Rx dispatch, Tx confirmation |
+| 4 | `middleware/can/can.*`, SPC58EC70 CAN HAL adapter | HS-CAN 송수신, Rx dispatch, Tx confirmation |
 | 5 | `middleware/il`, signal accessor와 주기 송신 | 애플리케이션 신호와 CAN 메시지 연결 |
 | 6 | `middleware/isotp`, ISO-TP 송수신 상태 머신 | UDS payload와 CAN frame 사이의 분할/재조립 |
 | 7 | `middleware/uds`, UDS dispatcher와 service callback | 진단 서비스 처리 |
@@ -72,31 +72,39 @@ MCU / CAN Hardware
 최종 HS-CAN 미들웨어는 1~9단계 산출물을 통합한 결과이다.
 
 ```text
-app -> uds -> isotp(classic) -> can(classic) -> SPC58xC CAN controller
-app -> il  -> can(classic)  -> SPC58xC CAN controller
+app -> uds -> isotp(classic) -> can(classic) -> SPC58EC70 CAN controller
+app -> il  -> can(classic)  -> SPC58EC70 CAN controller
 nm/ccl -> can/il/isotp/uds 상태 제어
 ```
 
 최종 CAN-FD 미들웨어는 HS-CAN 미들웨어에 10단계 산출물을 추가하고, frame model과 TP capacity를 FD-aware 구조로 확장한 결과이다.
 
 ```text
-app -> uds -> isotp(classic/fd) -> can(classic/fd) -> SPC58xC CAN-FD controller
-app -> il  -> can(classic/fd)   -> SPC58xC CAN-FD controller
+app -> uds -> isotp(classic/fd) -> can(classic/fd) -> SPC58EC70 CAN-FD controller
+app -> il  -> can(classic/fd)   -> SPC58EC70 CAN-FD controller
 nm/ccl -> classic/fd 송수신 상태 공통 제어
 ```
 
 통합 시에는 각 단계별 unit test와 단계 간 integration test를 남긴다. 예를 들어 4단계 CAN Driver는 mock HAL test를 통과해야 하고, 6단계 ISO-TP는 CAN mock 위에서 UDS payload 재조립 test를 통과해야 한다.
 
-## 2.1. 타깃 MCU: SPC58xC 적용 관점
+## 2.1. 타깃 MCU: SPC58EC70 적용 관점
 
-`SPC58xC` 시리즈를 대상으로 재구현할 때는 다음 관점을 처음부터 염두에 둔다.
+`SPC58EC70` MCU를 대상으로 재구현할 때는 다음 관점을 처음부터 염두에 둔다.
 
-- CPU/컴파일러 관점: Power Architecture 기반 automotive MCU이므로 정렬, endian, interrupt ABI, compiler intrinsic 사용 가능성을 고려한다.
-- CAN 주변장치 관점: 파생 제품에 따라 Classical CAN과 CAN-FD 지원 컨트롤러 구성이 다를 수 있으므로, CAN Driver는 HAL 추상화 계층을 둔다.
-- 메모리 관점: Vector 코드의 `V_MEMROM`, `V_MEMRAM` 같은 메모리 클래스 매크로는 SPC58xC의 flash/RAM section 배치로 연결될 수 있다.
+- CPU/컴파일러 관점: e200z420n3 듀얼 코어 기반 Power Architecture automotive MCU이므로 정렬, endian, interrupt ABI, VLE 컴파일 옵션, compiler intrinsic 사용 가능성을 고려한다.
+- CAN 주변장치 관점: SPC58EC70은 Bosch M_CAN 기반 ISO CAN-FD 인터페이스를 8개 제공하므로, CAN Driver는 channel instance, shared Message RAM offset, nominal/data bit timing, filter table, interrupt line을 설정으로 분리한다.
+- 메모리 관점: Vector 코드의 `V_MEMROM`, `V_MEMRAM` 같은 메모리 클래스 매크로는 SPC58EC70의 flash/RAM section 배치로 연결될 수 있다.
 - 인터럽트 관점: CAN Rx/Tx/BusOff interrupt는 ISR에서 최소 처리 후 task/context 함수로 넘기는 구조가 안전하다.
 - 타이밍 관점: CAN-FD에서는 arbitration phase와 data phase bitrate가 분리될 수 있으므로, CAN bit timing 설정을 Driver 설정 구조에 포함한다.
+- Message RAM 관점: M_CAN Message RAM은 word offset 기반으로 배치되므로 Rx FIFO, Rx buffer, Tx buffer, filter 영역이 겹치지 않게 계산하고 reset 후 초기화/ECC 조건을 확인한다.
 - 안전성 관점: ECU 미들웨어에서는 invalid handle, DLC mismatch, buffer overflow, BusOff 반복, diagnostic session timeout을 모두 방어적으로 처리해야 한다.
+
+공식 자료 기준 참조:
+
+- ST `SPC58EC70E3` product page: SPC58ECx 설명, e200z420n3 dual core, 8 M_CAN ISO CAN-FD feature 확인
+- ST `RM0407`, SPC58 C Line reference manual: SPC584Cx/SPC58ECx의 core, memory hierarchy, peripheral/clock 구조 확인
+- ST `AN5416`: SPC58EC CAN bus configuration, M_CAN subsystem, Message RAM, clock, filter 설정 확인
+- ST `TN1346`/`TN1348`: CAN/CAN-FD bit timing과 filter 설정 시 주의사항 확인
 
 ## 3. 1단계: 공통 타입과 유틸리티 학습
 
@@ -719,7 +727,7 @@ tests/
 - `Can_RxIndication`
 - Tx confirmation callback
 - Rx dispatch callback
-- 산출물: HS-CAN mock driver와 SPC58xC HAL adapter 인터페이스
+- 산출물: HS-CAN mock driver와 SPC58EC70 HAL adapter 인터페이스
 - 검증: Tx handle 송신, Rx ID 매칭, BusOff callback unit test
 
 ### Milestone 3: IL MVP
@@ -772,7 +780,7 @@ tests/
 - ISR callback 연결
 - BusOff interrupt 연결
 - 타이머 tick 연결
-- 산출물: SPC58xC HS-CAN bring-up package
+- 산출물: SPC58EC70 HS-CAN bring-up package
 - 검증: loopback, CAN analyzer 송수신, bitrate/termination/error counter 확인
 
 ### Milestone 9: CAN-FD 마이그레이션
@@ -783,7 +791,7 @@ tests/
 - CAN HAL의 FD frame 송수신 API 연결
 - ISO-TP over CAN-FD Single Frame / Multi-frame 처리
 - 기존 Classical CAN 회귀 테스트 수행
-- 산출물: SPC58xC CAN-FD 미들웨어 variant
+- 산출물: SPC58EC70 CAN-FD 미들웨어 variant
 - 검증: 12/16/20/24/32/48/64바이트 FD frame 송수신, BRS on/off, ISO-TP over FD, HS-CAN 회귀 test
 
 ## 14.1. 통합 시 공통 고려사항과 트러블슈팅
@@ -793,7 +801,7 @@ tests/
 - 빌드 variant를 분리한다: `MW_VARIANT_HSCAN`, `MW_VARIANT_CANFD`.
 - Driver API는 하나로 유지하되 frame 속성으로 Classical/FD를 구분한다.
 - UDS와 CCL은 frame format에 직접 의존하지 않게 한다.
-- SPC58xC HAL adapter는 mock HAL과 같은 상위 API를 제공해야 한다.
+- SPC58EC70 HAL adapter는 mock HAL과 같은 상위 API를 제공해야 한다.
 - 모든 단계 산출물은 독립 unit test와 통합 test를 가져야 한다.
 
 ### 발생 가능한 문제 케이스

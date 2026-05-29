@@ -83,9 +83,9 @@ UDS `0x28 CommunicationControl`은 진단기가 ECU의 송수신을 제어하는
 
 CAN Driver의 `Can_Transmit()`은 CCL의 Tx enabled 상태를 확인할 수 있고, Rx indication 경로는 Rx enabled 상태에 따라 상위 계층 전달을 막을 수 있다.
 
-### SPC58xC 적용 관점
+### SPC58EC70 적용 관점
 
-`SPC58xC`에서 CCL은 MCU의 CAN controller mode와 transceiver 제어에도 연결될 수 있다. 실제 시스템에는 CAN transceiver standby pin, wakeup pin, SBC(System Basis Chip) 제어가 있을 수 있다. CCL은 이런 하드웨어 제어를 직접 레지스터 수준으로 처리하기보다, `CanIf` 또는 board support 함수로 추상화하는 편이 좋다.
+`SPC58EC70`에서 CCL은 MCU의 CAN controller mode와 transceiver 제어에도 연결될 수 있다. 실제 시스템에는 CAN transceiver standby pin, wakeup pin, SBC(System Basis Chip) 제어가 있을 수 있다. CCL은 이런 하드웨어 제어를 직접 레지스터 수준으로 처리하기보다, `CanIf` 또는 board support 함수로 추상화하는 편이 좋다.
 
 또한 CAN-FD controller가 Classical CAN mailbox와 FD mailbox를 모두 갖는 구조라면, CCL의 Tx/Rx enable 정책이 두 frame format 모두에 적용되어야 한다. 진단만 CAN-FD로 올라가고 일반 신호는 Classical CAN으로 남는 혼합 구조도 가능하므로, CCL은 frame format을 가리지 않는 상위 정책 계층이어야 한다.
 
@@ -276,10 +276,10 @@ void AppDesc_SetCommModeFromUds(vuint8 control_type)
 - `middleware/ccl/ccl.h`: 미들웨어 초기화, online/offline, Tx enable/disable, main function API
 - `middleware/ccl/ccl.c`: Can/IL/TP/UDS/NM 초기화 순서와 상태 전파
 - `middleware/ccl/ccl_cfg.h`: 채널별 기능 사용 여부, 진단/NM 연동 정책
-- `examples/hs_can_middleware/main.c`: SPC58xC HS-CAN middleware 통합 예제
+- `examples/hs_can_middleware/main.c`: SPC58EC70 HS-CAN middleware 통합 예제
 - `tests/integration/test_hs_can_stack.c`: mock 기반 전체 통합 테스트
 
-이 단계를 완료하면 첫 번째 최종 결과물인 “SPC58xC 시리즈 MCU에서 HS-CAN 통신이 가능한 미들웨어”의 baseline이 만들어져야 한다. 이후 CAN-FD 단계는 이 baseline을 깨지 않고 확장하는 방식으로 진행한다.
+이 단계를 완료하면 첫 번째 최종 결과물인 “SPC58EC70 MCU에서 HS-CAN 통신이 가능한 미들웨어”의 baseline이 만들어져야 한다. 이후 CAN-FD 단계는 이 baseline을 깨지 않고 확장하는 방식으로 진행한다.
 
 ## 적용 고려사항과 트러블슈팅
 

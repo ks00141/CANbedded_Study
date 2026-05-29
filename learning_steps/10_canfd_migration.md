@@ -36,15 +36,16 @@
 | CRC | Classical CAN CRC | payload 길이에 따라 FD CRC 확장 |
 | ISO-TP | Single Frame 최대 7바이트 | CAN-FD에서는 더 큰 Single Frame 가능 |
 
-### SPC58xC에서 CAN-FD를 볼 때의 전제
+### SPC58EC70에서 CAN-FD를 볼 때의 전제
 
-타깃 MCU는 `SPC58xC` 시리즈이다. 이 계열은 차량용 Power Architecture 기반 MCU 제품군이며, 파생 제품에 따라 CAN-FD를 지원하는 CAN controller 인스턴스를 제공한다. 따라서 마이그레이션은 소프트웨어 자료구조 확장과 동시에 MCU 주변장치 설정 변경을 포함한다.
+타깃 MCU는 `SPC58EC70` MCU이다. 이 MCU는 차량용 Power Architecture 기반 SPC58 C Line 부품이며, Bosch M_CAN 기반 ISO CAN-FD 인터페이스 8개를 제공한다. M_CAN은 두 CAN subsystem으로 나뉘며 subsystem 내부에서 Message RAM, clock, ECC 자원을 공유한다. 따라서 마이그레이션은 소프트웨어 자료구조 확장과 동시에 M_CAN 인스턴스, shared Message RAM, clock, filter, interrupt 설정 변경을 포함한다.
 
-SPC58xC 적용 시 반드시 확인할 항목은 다음과 같다.
+SPC58EC70 적용 시 반드시 확인할 항목은 다음과 같다.
 
-- 사용 파생품이 실제로 CAN-FD를 지원하는 controller instance를 몇 개 제공하는가
-- 해당 instance의 message RAM 또는 mailbox가 64바이트 payload로 설정 가능한가
-- arbitration phase bitrate와 data phase bitrate clock source가 무엇인가
+- 사용할 보드에서 실제로 외부 transceiver와 pinmux가 연결된 M_CAN instance가 무엇인가
+- 해당 instance의 shared Message RAM 영역이 64바이트 payload object 크기로 겹치지 않게 배치되는가
+- Message RAM offset이 32-bit word 단위로 계산되고 reset 후 초기화되어 ECC 관련 예외를 피하는가
+- arbitration phase bitrate와 data phase bitrate clock source가 무엇이며, host clock이 protocol clock 이상인가
 - BRS 사용 시 transceiver와 네트워크가 data bitrate를 지원하는가
 - Rx filter가 Classical CAN과 CAN-FD frame을 어떻게 구분하는가
 - BusOff/error passive 상태 보고가 기존 Driver callback과 호환되는가
@@ -311,10 +312,10 @@ vuint8 IsoTp_GetConsecutiveFramePayload(vuint8 is_canfd, vuint8 addressing_bytes
 이 단계의 결과물은 HS-CAN baseline을 유지하면서 CAN-FD 통신이 가능한 두 번째 미들웨어 variant이다.
 
 - `middleware/can/canfd.h`, `middleware/can/canfd.c`: FD DLC/length 변환, FD frame 검증, BRS 정책 함수
-- `middleware/can/can_hal_spc58xc_fd.c`: SPC58xC CAN-FD controller 설정 skeleton
+- `middleware/can/can_hal_spc58ec70_fd.c`: SPC58EC70 CAN-FD controller 설정 skeleton
 - `middleware/config/canfd_cfg.h`: nominal/data bitrate, payload size, message별 FDF/BRS/length 설정
 - `middleware/tp/isotp_canfd.c`: CAN-FD payload 크기를 반영한 ISO-TP 확장 구현 또는 공용 구현의 FD path
-- `examples/canfd_middleware/main.c`: SPC58xC CAN-FD middleware 통합 예제
+- `examples/canfd_middleware/main.c`: SPC58EC70 CAN-FD middleware 통합 예제
 - `tests/integration/test_canfd_stack.c`: Classical 회귀와 CAN-FD 신규 동작을 함께 검증하는 통합 테스트
 
 최종적으로 저장소에는 HS-CAN variant와 CAN-FD variant가 동시에 존재해야 한다. 공통 계층, 설정 구조, IL/TP/UDS/NM/CCL의 대부분은 공유하고, 하드웨어 설정과 frame format 정책만 variant별로 달라지는 구조가 목표다.

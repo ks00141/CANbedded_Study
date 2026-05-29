@@ -28,19 +28,21 @@
 
 ### 재구현 학습 타깃 MCU
 
-본 학습 문서 세트에서 재구현 대상으로 삼는 MCU는 STMicroelectronics `SPC58xC` 시리즈입니다. 기존 CBD 원본 생성 정보에는 `MPC5515`/`SPC56x` 계열 설정이 보이지만, 학습용 재구현은 `SPC58xC`를 기준으로 확장합니다.
+본 학습 문서 세트에서 재구현 대상으로 삼는 MCU는 STMicroelectronics `SPC58EC70` MCU입니다. 기존 CBD 원본 생성 정보에는 `MPC5515`/`SPC56x` 계열 설정이 보이지만, 학습용 재구현은 `SPC58EC70`을 기준으로 확장합니다.
 
-`SPC58xC` 적용 시 특히 다음을 고려해야 합니다.
+`SPC58EC70` 적용 시 특히 다음을 고려해야 합니다.
 
-- Power Architecture 기반 automotive MCU 특성에 따른 endian, 정렬, interrupt ABI
-- 파생 제품별 CAN/CAN-FD controller instance 수와 기능 차이
+- e200z420n3 듀얼 코어 Power Architecture automotive MCU 특성에 따른 endian, 정렬, interrupt ABI, VLE 컴파일 옵션
+- 8개 Bosch M_CAN 인터페이스와 shared Message RAM 기반 ISO CAN-FD 구조
 - CAN-FD 사용 시 arbitration/data phase bitrate 설정
 - CAN message RAM 또는 mailbox payload size 설정
 - flash/RAM section 배치를 위한 메모리 클래스 매크로 연결
 - BusOff/error passive/error warning interrupt 처리
 - transceiver 또는 SBC 제어가 필요한 경우 CCL/NM과 board support 계층의 연결
 
-따라서 PC 학습용 구현에서는 mock CAN HAL로 시작하되, 구조체와 설정 테이블은 `SPC58xC`의 CAN-FD 포팅을 수용할 수 있도록 설계하는 것이 좋습니다.
+따라서 PC 학습용 구현에서는 mock CAN HAL로 시작하되, 구조체와 설정 테이블은 `SPC58EC70`의 CAN-FD 포팅을 수용할 수 있도록 설계하는 것이 좋습니다.
+
+공식 ST 자료 기준으로 `SPC58EC70E3`/SPC58ECx 계열은 최대 180 MHz e200z420n3 dual core, HSM 내부 e200z0 코어, 8개 M_CAN ISO CAN-FD 인터페이스를 제공하는 것으로 정리합니다. Flash/RAM 용량은 주문 코드와 Flash option에 따라 달라질 수 있으므로, 실제 포팅 프로젝트에서는 DS11620 ordering information과 보드 BOM의 정확한 part number를 기준으로 확정해야 합니다.
 
 ## 3. 전체 폴더 구조와 역할
 

@@ -83,9 +83,9 @@ ISO-TP 구현에서 가장 중요한 것은 정상 경로보다 오류 경로이
 
 CBD의 `TpRxTimeoutCF`, `TpTxTimeoutFC`, `TpSTMin` 같은 설정은 이런 상태 머신의 시간 기준이다.
 
-### SPC58xC 적용 관점
+### SPC58EC70 적용 관점
 
-`SPC58xC`에서는 ISO-TP 자체가 하드웨어에 종속되지는 않지만, timer tick과 CAN confirmation timing에 영향을 받는다. 일반적으로 10ms task tick만으로는 STmin이 작은 경우 정밀도가 부족할 수 있다. CAN-FD data phase를 사용하면 frame 간 간격이 더 짧아질 수 있으므로, STmin 처리에 사용할 timer 해상도를 설계해야 한다.
+`SPC58EC70`에서는 ISO-TP 자체가 하드웨어에 종속되지는 않지만, timer tick과 CAN confirmation timing에 영향을 받는다. 일반적으로 10ms task tick만으로는 STmin이 작은 경우 정밀도가 부족할 수 있다. CAN-FD data phase를 사용하면 frame 간 간격이 더 짧아질 수 있으므로, STmin 처리에 사용할 timer 해상도를 설계해야 한다.
 
 또한 ISR에서 TP 상태 머신을 전부 돌릴지, task에서 돌릴지도 결정해야 한다. 안전한 기본 구조는 ISR에서는 frame을 queue에 넣고, `TpTask()`에서 상태 머신을 진행하는 것이다.
 

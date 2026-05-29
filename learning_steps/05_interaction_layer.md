@@ -71,9 +71,9 @@ CAN Driver
   -> Application IlGetRxSignal()
 ```
 
-### SPC58xC 적용 관점
+### SPC58EC70 적용 관점
 
-IL은 MCU register를 직접 다루지 않는다. 하지만 `SPC58xC`에서 interrupt와 task가 동시에 buffer에 접근할 수 있으므로 concurrency를 고려해야 한다.
+IL은 MCU register를 직접 다루지 않는다. 하지만 `SPC58EC70`에서 interrupt와 task가 동시에 buffer에 접근할 수 있으므로 concurrency를 고려해야 한다.
 
 - Rx buffer는 CAN ISR 또는 Driver task에서 갱신될 수 있다.
 - Application task는 같은 buffer를 읽을 수 있다.
