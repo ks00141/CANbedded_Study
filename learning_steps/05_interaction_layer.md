@@ -226,3 +226,38 @@ IL은 application과 bus 사이의 데이터 계약이다. 이 계층에서 sign
 - 신호 get 함수가 Rx buffer에서 값을 정확히 조립한다.
 - 주기 task가 설정된 주기마다 CAN 송신을 요청한다.
 - CAN Driver의 Rx callback과 IL이 연결된다.
+
+## Q&A
+
+1. Q: IL은 CAN Driver와 무엇이 다른가?
+   A: CAN Driver는 frame 송수신을 담당하고, IL은 frame payload 안의 signal 값을 application 변수와 연결한다. 즉 IL은 “어떤 byte/bit가 어떤 의미인지”를 관리한다.
+
+2. Q: signal packing/unpacking에서 가장 흔한 실수는 무엇인가?
+   A: byte order와 bit position을 혼동하는 것이다. CPU endian이 아니라 DBC 또는 설정 테이블의 signal endian, start bit, length, scaling 정책을 따라야 한다.
+
+3. Q: Tx buffer를 signal마다 바로 송신해도 되는가?
+   A: 일반적으로는 아니다. 여러 signal이 한 message를 공유할 수 있으므로 signal update와 message transmit timing을 분리한다. 주기 송신, event 송신, update bit 정책을 설정으로 관리한다.
+
+4. Q: Rx indication에서 모든 application 처리를 바로 실행해도 되는가?
+   A: ISR context에서 긴 처리를 하면 timing 문제가 생길 수 있다. Rx callback에서는 buffer copy와 update flag 설정을 하고, application 처리는 main function에서 수행하는 구조가 안전하다.
+
+5. Q: signal buffer에는 `volatile`을 붙여야 하는가?
+   A: ISR과 main loop가 직접 공유한다면 필요할 수 있다. 다만 `volatile`만으로 race가 해결되지는 않으므로 double buffer, lock, copy-on-update 정책을 함께 설계한다.
+
+6. Q: timeout supervision은 IL 책임인가?
+   A: 일반적으로 수신 message timeout, signal invalidation, replacement value 적용은 IL 또는 IL과 application 사이의 책임이다. Driver는 frame 수신 여부만 알 뿐 signal freshness를 판단하지 않는다.
+
+7. Q: CAN-FD로 가면 IL은 어떻게 달라지는가?
+   A: signal 개념은 유지되지만 payload 길이가 64바이트까지 늘어나고 더 많은 signal이 한 frame에 들어갈 수 있다. buffer capacity, packing loop, update flag 범위를 8바이트 전용으로 만들지 않아야 한다.
+
+8. Q: IL 주기 task의 주기는 어떻게 정하는가?
+   A: 메시지별 주기와 system tick 해상도를 기준으로 정한다. 예를 들어 10ms task에서 100ms message는 counter 10회마다 송신하고, jitter 허용 범위는 analyzer trace로 확인한다.
+
+9. Q: analyzer payload와 application 값이 다르면 어디를 확인해야 하는가?
+   A: raw payload, signal start bit, endian, mask/shift, sign extension, scaling, offset 순서로 확인한다. 먼저 raw 값이 맞는지 본 뒤 물리값 변환을 확인한다.
+
+10. Q: IL과 ISO-TP는 같은 CAN frame을 공유할 수 있는가?
+    A: 물리 bus는 공유하지만 message ID와 handle 정책은 분리하는 것이 좋다. 주기 signal frame과 diagnostic TP frame은 timing과 buffer ownership이 다르므로 별도 설정으로 관리한다.
+
+11. Q: IL 완료 후 통합 기준은 무엇인가?
+    A: Driver Rx callback이 IL Rx buffer를 갱신하고, IL task가 Tx buffer를 주기적으로 Driver에 송신 요청하며, analyzer에서 주기와 payload가 설정값과 일치해야 한다.

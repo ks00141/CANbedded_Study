@@ -125,3 +125,38 @@ CAN-FD 산출물은 HS-CAN 조건을 모두 유지하면서 다음을 추가로 
 6. BusOff와 CCL online/offline 정책을 실제 bus 오류 조건에서 확인한다.
 7. CAN-FD controller 설정, FD payload length, BRS on/off를 확인한다.
 8. CAN-FD 적용 후 HS-CAN baseline trace를 다시 비교한다.
+
+## Q&A
+
+1. Q: 0단계에서 코드를 많이 작성하지 않는데 왜 중요한가?
+   A: 0단계는 전체 미들웨어의 계층 경계와 최종 산출물을 고정하는 단계이다. 여기서 HS-CAN baseline과 CAN-FD 확장 방향을 명확히 해 두면 이후 단계가 단편 예제로 흩어지지 않는다.
+
+2. Q: HS-CAN 결과물과 CAN-FD 결과물은 완전히 별도 프로젝트로 만들어야 하는가?
+   A: 권장 구조는 공통 계층을 공유하고 variant 설정만 분리하는 방식이다. Common, IL, TP, UDS, NM, CCL의 대부분은 공유하고 CAN Driver HAL, bit timing, payload 정책, message 설정만 분기한다.
+
+3. Q: 통합 순서를 바꾸어 UDS부터 구현해도 되는가?
+   A: 학습용으로 UDS 문법만 먼저 볼 수는 있지만, 실제 동작 미들웨어를 만들려면 아래 계층부터 올리는 순서가 안전하다. UDS는 ISO-TP, ISO-TP는 CAN Driver, CAN Driver는 설정과 공통 타입에 의존한다.
+
+4. Q: 각 단계 산출물의 성공 여부는 무엇으로 판단하는가?
+   A: 단순 빌드 성공이 아니라 보드에서 관찰 가능한 결과로 판단한다. 예를 들어 Driver 단계는 M_CAN register와 analyzer frame, IL 단계는 payload와 signal 값, TP 단계는 PCI/SN/FC 흐름으로 확인한다.
+
+5. Q: 통합 중 가장 먼저 깨지는 부분은 보통 어디인가?
+   A: 설정 계층과 Driver 계층의 경계가 가장 자주 문제를 만든다. M_CAN instance, Message RAM offset, interrupt vector, transceiver pin, bit timing 중 하나만 틀려도 상위 계층은 정상이어도 통신이 되지 않는다.
+
+6. Q: CAN-FD를 위해 0단계에서 미리 결정해야 하는 것은 무엇인가?
+   A: `dlc`와 `length` 분리, payload 최대 크기, FD/BRS message policy, Message RAM 크기 배분, ISO-TP over CAN-FD 정책을 미리 결정해야 한다. 이 결정을 미루면 10단계에서 구조 변경 폭이 커진다.
+
+7. Q: 디렉터리 구조는 문서와 반드시 같아야 하는가?
+   A: 이름은 프로젝트 상황에 맞게 조정할 수 있지만 계층 책임은 유지해야 한다. Driver가 UDS를 알거나 CCL이 M_CAN register를 직접 만지는 식의 역방향 의존은 피한다.
+
+8. Q: 통합 로그는 어떤 형식으로 남기는 것이 좋은가?
+   A: 단계, variant, bitrate, M_CAN instance, 주요 register dump, analyzer trace 파일명, pass/fail 판단을 한 줄로 남긴다. 나중에 CAN-FD 회귀 확인 시 HS-CAN baseline과 바로 비교할 수 있어야 한다.
+
+9. Q: BusOff, CCL, UDS CommunicationControl은 왜 0단계부터 같이 고려하는가?
+   A: 모두 통신 가능 상태를 제어하는 기능이기 때문이다. Driver만 online이어도 CCL이 Tx disable이면 송신이 막혀야 하고, BusOff 중에는 UDS 요청이 들어와도 정책에 맞게 제한되어야 한다.
+
+10. Q: 최종 산출물의 “동작”은 어느 수준까지 의미하는가?
+    A: HS-CAN은 주기 송신, 수신 callback, ISO-TP/UDS 기본 서비스, BusOff 복구, CCL 제어가 실제 bus에서 확인되는 수준을 뜻한다. CAN-FD는 여기에 FD frame, BRS on/off, 64바이트 payload, ISO-TP over FD 검증이 추가된다.
+
+11. Q: 통합 후 문제가 생기면 어느 계층부터 확인해야 하는가?
+    A: 물리 연결과 transceiver, M_CAN clock/pinmux, Driver register, CAN analyzer trace, 상위 계층 로그 순서로 올라간다. 상위 계층부터 추측하면 하드웨어 설정 오류를 놓치기 쉽다.

@@ -191,3 +191,38 @@ HS-CAN 결과물은 `MW_CAN_USE_FD == 0`인 설정 variant로 생성하고, CAN-
 - 숫자 상수를 구현 파일에 직접 쓰지 않는다.
 - 기능 스위치 매크로로 코드 포함 여부를 제어할 수 있다.
 - 설정 파일만 바꿔도 테이블 크기와 동작 정책이 바뀐다.
+
+## Q&A
+
+1. Q: Generated Config 계층은 실제 코드 생성기가 없어도 필요한가?
+   A: 필요하다. 코드 생성기가 없더라도 설정값을 한곳에 모으는 구조를 먼저 만들어야 이후 자동 생성 코드로 바꾸기 쉽다. 학습용으로는 수동 작성한 `can_cfg.h`, `can_par.c`가 생성 코드 역할을 한다.
+
+2. Q: 설정값을 `can.c` 안에 직접 쓰면 왜 안 되는가?
+   A: Driver logic과 ECU variant data가 섞이면 재사용이 어려워진다. CAN channel 수, Tx/Rx handle, ID, bitrate, payload size는 설정 테이블로 빼야 HS-CAN과 CAN-FD variant를 분리할 수 있다.
+
+3. Q: `MW_TARGET_SPC584C70` 같은 target macro는 어디에 쓰이는가?
+   A: startup, compiler option, HAL register mapping, interrupt vector, clock 설정의 조건부 포함에 쓰인다. 단순 표시용이 아니라 잘못된 타깃 설정을 빌드 단계에서 막는 guard로 사용한다.
+
+4. Q: SPC58EC70 자료를 참고해도 되는가?
+   A: CAN-FD/M_CAN family-level 설명은 참고할 수 있지만 설정 파일은 `SPC584C70` 전용으로 작성한다. 특히 core 수, linker memory map, interrupt target, RAM 배치는 혼용하면 안 된다.
+
+5. Q: `dlc`와 `length`를 모두 설정에 넣어야 하는가?
+   A: CAN-FD까지 고려하면 둘을 분리하는 편이 안전하다. Classical CAN에서는 `dlc == length`가 많지만 CAN-FD에서는 DLC 9가 12바이트를 의미하는 등 매핑이 달라진다.
+
+6. Q: Message RAM offset은 왜 설정으로 관리해야 하는가?
+   A: M_CAN의 Rx FIFO, Tx buffer, filter 영역은 shared Message RAM 안에서 배치된다. offset이 겹치면 송수신 데이터가 깨지므로 설정 테이블과 계산표로 추적해야 한다.
+
+7. Q: 기능 스위치 매크로는 많을수록 좋은가?
+   A: 아니다. 너무 많은 스위치는 조합 폭발과 미검증 variant를 만든다. HS-CAN/CAN-FD, ISO-TP 사용 여부, UDS 서비스 사용 여부처럼 실제 산출물에 의미 있는 축만 둔다.
+
+8. Q: 설정 오류는 보통 어떤 증상으로 나타나는가?
+   A: 빌드는 되지만 frame이 bus에 나오지 않거나, 수신 interrupt가 없거나, callback handle이 틀리는 형태가 많다. 설정값과 register dump, analyzer trace를 함께 비교해야 한다.
+
+9. Q: 설정 파일을 수정한 뒤 반드시 확인할 것은 무엇인가?
+   A: variant name, M_CAN instance, bitrate 계산값, filter 수, Tx/Rx object 수, payload size, interrupt line, transceiver pin을 확인한다. 변경 전후 diff와 bring-up 로그를 함께 남긴다.
+
+10. Q: CAN-FD variant는 기존 HS-CAN 설정을 복사해서 만들면 되는가?
+    A: 구조는 복사할 수 있지만 payload size, data bitrate, FDF/BRS, Message RAM 배치, ISO-TP capacity는 다시 계산해야 한다. 특히 64바이트 object로 바꾸면 Message RAM 사용량이 크게 늘어난다.
+
+11. Q: 설정 계층 완료 후 다음 단계에 넘겨야 할 핵심 산출물은 무엇인가?
+    A: Tx/Rx handle table, controller config, bitrate config, feature switch, target macro, payload policy이다. 3단계 데이터 모델과 4단계 Driver는 이 계약을 기준으로 작성된다.

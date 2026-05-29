@@ -319,3 +319,38 @@ UDS 계층은 실제 ECU 기능과 직접 연결되므로 요청 검증, session
 - 지원 서비스는 positive response를 생성한다.
 - 미지원 서비스는 negative response를 생성한다.
 - 서비스 handler와 애플리케이션 데이터 제공 함수를 분리할 수 있다.
+
+## Q&A
+
+1. Q: UDS 계층은 CAN ID를 직접 알아야 하는가?
+   A: 일반적으로 알 필요가 없다. CAN ID와 addressing은 CAN Driver/ISO-TP 설정에서 처리하고, UDS는 완성된 request payload와 response payload에 집중한다.
+
+2. Q: Positive Response SID는 항상 요청 SID에 `0x40`을 더하면 되는가?
+   A: 대부분의 기본 서비스는 그렇지만 모든 세부 동작을 단순화해서는 안 된다. 서비스별 response format, suppress positive response bit, response pending 정책을 함께 확인해야 한다.
+
+3. Q: Negative Response Code는 어디에서 결정하는가?
+   A: dispatcher와 service handler가 조건 실패 원인을 판단해 결정한다. service 미지원, sub-function 미지원, length 오류, session/security 조건 실패를 구분해야 진단 장비에서 원인 추적이 가능하다.
+
+4. Q: session 상태는 왜 필요한가?
+   A: ECU는 default, extended, programming session에 따라 허용 서비스가 다르다. 예를 들어 단순 DID 읽기는 default에서 허용할 수 있지만 flash write나 routine control은 더 높은 session이 필요할 수 있다.
+
+5. Q: SecurityAccess는 이 단계에서 반드시 완성해야 하는가?
+   A: 최소 구조는 준비하는 것이 좋다. 실제 seed/key 알고리즘은 application callback으로 분리하되, security level 조건 검사와 실패 시 NRC 반환 흐름은 UDS core에 있어야 한다.
+
+6. Q: `appdesc.c`와 `desc.c`를 나누는 이유는 무엇인가?
+   A: `desc.c`는 UDS protocol 처리와 dispatch를 담당하고, `appdesc.c`는 ECU별 DID/RID/application data를 제공한다. 이 분리를 지키면 같은 UDS core를 다른 ECU에도 재사용할 수 있다.
+
+7. Q: Reset 서비스는 요청을 받자마자 바로 reset해도 되는가?
+   A: 안전하지 않다. Positive response 전송이 완료된 뒤 deferred action으로 reset을 수행해야 한다. 그렇지 않으면 진단 장비는 응답을 받지 못하고 timeout으로 판단할 수 있다.
+
+8. Q: CAN-FD로 바뀌면 UDS handler를 수정해야 하는가?
+   A: 대부분 수정하지 않아야 한다. UDS handler는 TP가 제공하는 payload stream만 다루고, frame 분할 방식은 ISO-TP 계층에 맡기는 구조가 바람직하다.
+
+9. Q: DID 길이는 callback이 자유롭게 반환해도 되는가?
+   A: variable length DID라면 가능하지만 table에 정책을 명확히 두어야 한다. fixed length DID는 table length와 callback 반환 length가 일치하는지 검사해야 한다.
+
+10. Q: UDS 문제를 디버깅할 때 어떤 로그가 가장 유용한가?
+    A: SID, sub-function 또는 DID, request length, current session, security level, selected NRC, response length이다. 이 정보가 있으면 protocol 오류와 application callback 오류를 분리할 수 있다.
+
+11. Q: CCL 단계와 UDS는 어떻게 연결되는가?
+    A: UDS `0x28 CommunicationControl` 서비스는 Tx/Rx enable 상태를 바꾸는 요청이므로 CCL 또는 통신 제어 adapter로 전달해야 한다. UDS core가 직접 Driver 상태를 바꾸지 않도록 한다.

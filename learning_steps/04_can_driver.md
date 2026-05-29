@@ -304,3 +304,38 @@ Driver 문제는 “레지스터 설정 dump -> Tx mailbox pending bit -> interr
 - 수신 ID를 Rx handle로 매핑할 수 있다.
 - Rx callback과 Tx callback을 통해 상위 계층이 연결된다.
 - BusOff callback을 NM 단계에서 사용할 수 있다.
+
+## Q&A
+
+1. Q: CAN Driver는 CAN protocol 전체를 구현하는 계층인가?
+   A: 아니다. Driver는 M_CAN controller 초기화, Tx/Rx object 처리, interrupt, error state, BusOff 감지를 담당한다. ISO-TP, UDS, IL signal 의미는 상위 계층 책임이다.
+
+2. Q: `Can_Init()`에서 가장 먼저 확인해야 할 하드웨어 조건은 무엇인가?
+   A: M_CAN clock enable, reset 해제, pinmux, transceiver standby 해제, INIT/CCE 진입 가능 여부이다. 이 조건이 맞지 않으면 bit timing이나 Message RAM 설정이 올바라도 frame이 나오지 않는다.
+
+3. Q: Message RAM 초기화가 왜 중요한가?
+   A: M_CAN은 filter, Rx FIFO, Tx buffer를 Message RAM에 저장한다. offset이 틀리거나 초기화가 빠지면 controller가 잘못된 영역을 읽어 수신 누락, Tx 실패, ECC error가 발생할 수 있다.
+
+4. Q: internal loopback과 external bus 검증은 무엇이 다른가?
+   A: internal loopback은 controller 내부 Tx/Rx path와 interrupt를 확인하는 데 좋다. external bus 검증은 pinmux, transceiver, termination, analyzer 설정까지 포함한 실제 통신 조건을 확인한다.
+
+5. Q: Tx confirmation은 언제 상위 계층에 알려야 하는가?
+   A: Tx request를 넣은 직후가 아니라 M_CAN의 Tx complete event 또는 interrupt를 확인한 뒤 알려야 한다. 즉시 confirmation을 주면 mailbox busy, bus error, arbitration delay를 숨기게 된다.
+
+6. Q: Rx interrupt가 발생했는데 callback이 호출되지 않으면 어디를 봐야 하는가?
+   A: filter match, Rx FIFO status, `IR` flag clear 순서, Rx handle mapping table, callback registration을 본다. controller 수신과 미들웨어 dispatch를 분리해서 확인해야 한다.
+
+7. Q: BusOff는 Driver에서 복구까지 처리해야 하는가?
+   A: Driver는 BusOff 감지와 controller state 전환을 담당하고, 복구 정책과 타이머는 NM/CCL 계층과 협력하는 구조가 좋다. Driver가 임의로 online 복귀하면 상위 상태와 불일치가 생길 수 있다.
+
+8. Q: CAN-FD를 고려하면 Driver API에서 무엇을 확장해야 하는가?
+   A: frame format에 `is_fd`, `brs`, `esi`, `length`, `dlc`를 전달할 수 있어야 한다. HAL은 이를 M_CAN Tx element의 FDF/BRS/DLC field로 변환한다.
+
+9. Q: bit timing 문제는 어떻게 구분하는가?
+   A: analyzer bitrate 설정, M_CAN `NBTP/DBTP`, sample point 계산표, error counter, last error code를 함께 본다. FD BRS 사용 시 nominal phase와 data phase를 따로 검증한다.
+
+10. Q: Driver bring-up 로그에는 무엇을 남겨야 하는가?
+    A: controller instance, clock, NBTP/DBTP, Message RAM base/offset, filter 수, Tx/Rx object 수, interrupt vector, PSR/ECR, analyzer frame ID/DLC/payload를 남긴다.
+
+11. Q: Driver 완료 후 상위 계층에 제공해야 할 최소 API는 무엇인가?
+    A: `Can_Init`, `Can_Write`, Tx confirmation callback, Rx indication callback, BusOff indication, mode control API가 필요하다. IL/TP/NM/CCL은 이 API를 통해 Driver와 연결된다.
