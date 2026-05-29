@@ -269,6 +269,31 @@ void AppDesc_SetCommModeFromUds(vuint8 control_type)
 4. `CCL_USER_DIAG` 요청이 들어오면 sleep 진입을 막는 정책을 추가하라.
 5. CCL 상태 변화 시 애플리케이션 callback을 호출하도록 구현하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 앞 단계 산출물을 하나의 통신 미들웨어로 묶는 Communication Control Layer이다.
+
+- `middleware/ccl/ccl.h`: 미들웨어 초기화, online/offline, Tx enable/disable, main function API
+- `middleware/ccl/ccl.c`: Can/IL/TP/UDS/NM 초기화 순서와 상태 전파
+- `middleware/ccl/ccl_cfg.h`: 채널별 기능 사용 여부, 진단/NM 연동 정책
+- `examples/hs_can_middleware/main.c`: SPC58xC HS-CAN middleware 통합 예제
+- `tests/integration/test_hs_can_stack.c`: mock 기반 전체 통합 테스트
+
+이 단계를 완료하면 첫 번째 최종 결과물인 “SPC58xC 시리즈 MCU에서 HS-CAN 통신이 가능한 미들웨어”의 baseline이 만들어져야 한다. 이후 CAN-FD 단계는 이 baseline을 깨지 않고 확장하는 방식으로 진행한다.
+
+## 적용 고려사항과 트러블슈팅
+
+CCL은 각 계층의 API를 단순 호출하는 파일이 아니라 시스템 상태를 하나로 묶는 조정자다. 초기화 순서, offline 정책, diagnostic communication control, BusOff 전파가 이 계층에서 엇갈리면 개별 모듈 테스트는 통과해도 전체 시스템이 불안정해진다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| 초기화 중 Rx interrupt가 먼저 들어옴 | Driver enable 시점이 너무 빠름 | 모든 buffer와 callback table 초기화 후 interrupt를 enable한다. |
+| 진단 service로 통신 off를 요청했는데 주기 Tx가 계속됨 | CCL Tx gate가 IL periodic path에 적용되지 않음 | event Tx와 periodic Tx가 같은 `Ccl_IsTxAllowed()`를 통과하게 한다. |
+| BusOff 후 UDS가 여전히 positive response 생성 | channel offline 상태가 TP/UDS에 전달되지 않음 | TP transmit request 단계에서 channel online 여부를 확인한다. |
+| CAN-FD 확장 시 일부 계층이 Classical 전용 API 호출 | CCL 통합 API가 format 정보를 전달하지 않음 | frame format은 CanFrame/config를 통해 하위로 흐르게 하고 CCL에서 임의 변환하지 않는다. |
+
+트러블슈팅은 전체 main function 호출 순서를 먼저 확인한다. 권장 순서는 `Ccl_MainFunction -> Nm/BusOff -> Can_MainFunction -> Il_MainFunction -> IsoTp_MainFunction -> Uds_MainFunction`처럼 상태 관리가 통신 처리보다 앞서도록 설계하는 것이다.
+
 ## 완료 기준
 
 - 사용자별 통신 요청/해제 상태를 관리할 수 있다.

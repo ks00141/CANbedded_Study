@@ -254,6 +254,32 @@ void Can_TestForceBusOff(void)
 4. 송신 큐를 간단한 ring buffer로 구현하라.
 5. BusOff 발생 후에는 송신 요청이 실패하도록 구현하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 실제 CAN controller를 추상화하는 Driver 계층이다.
+
+- `middleware/can/can.h`: `Can_Init`, `Can_Write`, `Can_MainFunction`, callback API
+- `middleware/can/can.c`: 상태 관리, Tx queue, Rx dispatch, BusOff 감지 연결
+- `middleware/can/can_hal.h`: SPC58xC 레지스터 접근을 감추는 HAL 인터페이스
+- `middleware/can/can_hal_mock.c`: PC 테스트용 mock HAL
+- `middleware/can/can_hal_spc58xc.c`: SPC58xC HS-CAN용 HAL skeleton
+- `tests/can/test_can_driver.c`: Tx/Rx/queue/error 상태 테스트
+
+HS-CAN 미들웨어의 첫 번째 동작 목표는 `Can_Init -> Can_Write -> Tx confirmation -> Rx indication` 흐름이 mock과 보드에서 모두 확인되는 것이다. CAN-FD 미들웨어에서는 같은 API로 FD frame을 보낼 수 있도록 `CanFrame` format 정보를 HAL까지 전달해야 한다.
+
+## 적용 고려사항과 트러블슈팅
+
+SPC58xC에서 Driver 구현 시에는 CAN module clock enable, soft reset, bit timing, message buffer 초기화, interrupt routing, pin mux, transceiver standby 제어가 모두 맞아야 실제 bus에 frame이 나온다. 이 중 하나라도 빠지면 소프트웨어 로직이 맞아도 통신이 되지 않는다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| `Can_Write()`는 성공하지만 bus에 frame이 없음 | pin mux, transceiver enable, mailbox request 누락 | oscilloscope/CAN analyzer로 TXD와 CANH/CANL을 분리 확인한다. |
+| Rx interrupt는 발생하지만 상위 callback이 호출되지 않음 | hardware object와 software handle 매핑 오류 | Rx object index, filter ID, callback table index를 로그로 남긴다. |
+| BusOff 후 복구되지 않음 | controller reset/recovery sequence 누락 | BusOff 상태 진입, offline 전환, 재초기화, online 복귀 단계를 상태도로 검증한다. |
+| CAN-FD frame 송신 실패 | payload size 설정 또는 FD enable 누락 | message buffer payload size, FDF/BRS bit, data phase timing 설정을 확인한다. |
+
+Driver 문제는 PC mock 테스트만으로 끝나지 않는다. 보드에서는 “레지스터 설정 dump -> Tx mailbox pending bit -> interrupt flag -> analyzer frame” 순서로 좁혀가며 확인한다.
+
 ## 완료 기준
 
 - Tx handle만으로 CAN 송신 mock이 가능하다.

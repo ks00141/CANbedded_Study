@@ -201,6 +201,31 @@ const CanTxObjectConfig *Can_GetTxConfig(CanTxHandle handle)
 3. DLC가 8보다 큰 설정값이 들어오면 컴파일 또는 초기화 단계에서 오류를 반환하도록 구현하라.
 4. `IPSU_01_200ms` 버퍼의 0~3바이트를 32비트 little-endian 값으로 쓰는 함수를 작성하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 CAN 계층 전체가 공유할 frame/message data model이다.
+
+- `middleware/can/can_types.h`: CAN ID, DLC, channel, handle, 상태 enum 정의
+- `middleware/can/can_frame.h`: Classical CAN과 CAN-FD를 모두 표현할 수 있는 `CanFrame` 구조체
+- `middleware/can/can_dlc.h`, `middleware/can/can_dlc.c`: DLC와 실제 payload length 변환 함수
+- `middleware/can/can_par.h`, `middleware/can/can_par.c`: message handle과 ID/filter/length 정책 매핑
+- `tests/can/test_can_data_model.c`: ID 범위, DLC 변환, length 검증 테스트
+
+HS-CAN 산출물에서는 `length <= 8`인 frame만 허용한다. CAN-FD 산출물에서는 `length <= 64`, DLC 9~15의 비선형 payload 길이, BRS 여부를 구조체에서 표현할 수 있어야 한다.
+
+## 적용 고려사항과 트러블슈팅
+
+데이터 모델은 한 번 잘못 잡으면 Driver, IL, ISO-TP, UDS까지 모두 영향을 받는다. 따라서 “DLC는 버스에 실리는 코드값이고 length는 실제 바이트 수”라는 규칙을 코드와 문서에서 분명히 유지해야 한다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| CAN-FD 12바이트 메시지가 9바이트로 처리됨 | DLC 9를 length 9로 오해 | `CanFd_DlcToLength(9) == 12` 테스트를 필수로 둔다. |
+| 표준 ID와 확장 ID filter가 섞임 | ID 타입 flag 누락 | `id_type` 또는 `is_extended` 필드를 명시하고 범위 검사를 분리한다. |
+| IL에서 signal offset이 맞지 않음 | bit numbering/endian 정책 미정 | Motorola/Intel bit order 규칙을 data model 문서에 고정한다. |
+| payload overflow가 Driver에서 뒤늦게 발견됨 | 상위 계층 length 검증 누락 | frame 생성 함수에서 format별 최대 payload를 먼저 검증한다. |
+
+트러블슈팅 시에는 raw CAN frame dump와 내부 `CanFrame` 값을 나란히 기록한다. ID, IDE, FDF, BRS, DLC, length, data byte를 같은 순서로 출력하면 계층 간 해석 차이를 빨리 찾을 수 있다.
+
 ## 완료 기준
 
 - CAN 메시지를 이름이 아니라 핸들로 접근할 수 있다.

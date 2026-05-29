@@ -306,6 +306,33 @@ vuint8 IsoTp_GetConsecutiveFramePayload(vuint8 is_canfd, vuint8 addressing_bytes
 6. 기존 UDS `0x22` 응답이 30바이트일 때 Classical CAN과 CAN-FD에서 각각 몇 개 프레임으로 나뉘는지 계산하라.
 7. CCL에서 Tx disable 상태일 때 Classical CAN과 CAN-FD 송신이 모두 막히는지 테스트하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 HS-CAN baseline을 유지하면서 CAN-FD 통신이 가능한 두 번째 미들웨어 variant이다.
+
+- `middleware/can/canfd.h`, `middleware/can/canfd.c`: FD DLC/length 변환, FD frame 검증, BRS 정책 함수
+- `middleware/can/can_hal_spc58xc_fd.c`: SPC58xC CAN-FD controller 설정 skeleton
+- `middleware/config/canfd_cfg.h`: nominal/data bitrate, payload size, message별 FDF/BRS/length 설정
+- `middleware/tp/isotp_canfd.c`: CAN-FD payload 크기를 반영한 ISO-TP 확장 구현 또는 공용 구현의 FD path
+- `examples/canfd_middleware/main.c`: SPC58xC CAN-FD middleware 통합 예제
+- `tests/integration/test_canfd_stack.c`: Classical 회귀와 CAN-FD 신규 동작을 함께 검증하는 통합 테스트
+
+최종적으로 저장소에는 HS-CAN variant와 CAN-FD variant가 동시에 존재해야 한다. 공통 계층, 설정 구조, IL/TP/UDS/NM/CCL의 대부분은 공유하고, 하드웨어 설정과 frame format 정책만 variant별로 달라지는 구조가 목표다.
+
+## 적용 고려사항과 트러블슈팅
+
+CAN-FD 마이그레이션은 단순히 data 배열을 64바이트로 늘리는 작업이 아니다. controller의 FD enable, message buffer payload size, nominal/data phase bit timing, BRS 정책, transceiver 지원 여부, analyzer 설정까지 모두 맞아야 한다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| FD frame이 analyzer에서 Classical error로 보임 | analyzer 또는 transceiver가 CAN-FD/BRS를 지원하지 않음 | 장비의 CAN-FD 지원과 bitrate 설정을 먼저 확인한다. |
+| 12바이트 FD 송신이 실패 | DLC/length 변환 또는 payload size 설정 오류 | `length=12 -> DLC=9` 변환과 mailbox payload size를 확인한다. |
+| BRS를 켜면 통신이 깨짐 | data phase timing/sample point 불일치 | nominal bitrate와 data bitrate를 분리해 계산하고 bus 부하를 낮춰 재시험한다. |
+| ISO-TP 응답 frame 수가 예상보다 많음 | FD payload 계산에서 addressing/PCI byte를 빼지 않음 | SF/CF별 usable payload 계산식을 테스트로 고정한다. |
+| HS-CAN 회귀가 깨짐 | 공용 구조체 변경이 Classical path를 변경 | 모든 FD 변경 후 Classical 8바이트 테스트를 먼저 재실행한다. |
+
+트러블슈팅 순서는 `HS-CAN baseline 재확인 -> FD controller init 확인 -> 단일 FD frame loopback -> BRS off FD 송신 -> BRS on FD 송신 -> ISO-TP/UDS 장문 응답 -> 통합 부하 테스트`가 안전하다.
+
 ## 완료 기준
 
 - 기존 HS-CAN 메시지가 회귀 테스트에서 그대로 통과한다.

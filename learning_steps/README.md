@@ -10,10 +10,22 @@
 - CBD 원본에서 확인할 파일과 관찰 포인트
 - 학습용 C 예제 코드
 - 연습문제
+- 단계 산출물
+- 적용 고려사항과 트러블슈팅
 - 완료 기준
+
+## 최종 결과물
+
+이 학습자료의 최종 결과물은 아래 두 가지 동작 가능한 미들웨어이다.
+
+1. `SPC58xC` 시리즈 MCU에서 HS-CAN/Classical CAN 통신이 가능한 미들웨어
+2. `SPC58xC` 시리즈 MCU에서 CAN-FD 통신이 가능한 미들웨어
+
+1~9단계 결과물을 통합하면 HS-CAN 미들웨어 baseline이 된다. 10단계 결과물을 적용하면 같은 구조를 CAN-FD variant로 확장한다. 각 단계는 반드시 코드/설정/테스트 산출물을 남겨 다음 단계에서 재사용해야 한다.
 
 ## 학습 순서
 
+0. [00_integration_deliverables.md](00_integration_deliverables.md): 최종 산출물, 통합 전략, 공통 트러블슈팅
 1. [01_common_vstdlib.md](01_common_vstdlib.md): 공통 타입과 VStdLib
 2. [02_generated_config.md](02_generated_config.md): 생성 설정 구조
 3. [03_can_data_model.md](03_can_data_model.md): CAN 메시지 데이터 모델

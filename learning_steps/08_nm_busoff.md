@@ -180,6 +180,30 @@ NmState NmBasic_GetState(void)
 4. 빠른 복구와 느린 복구 시간을 설정 파일에서 가져오도록 바꿔라.
 5. 복구 횟수와 현재 상태를 읽는 debug API를 추가하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 네트워크 상태와 BusOff 복구를 관리하는 기본 NM/오류 관리 계층이다.
+
+- `middleware/nm/nm_basic.h`, `middleware/nm/nm_basic.c`: online/offline/sleep 준비 상태 관리
+- `middleware/nm/busoff.h`, `middleware/nm/busoff.c`: BusOff 감지, 통신 차단, 복구 타이머, 재초기화 요청
+- `middleware/nm/nm_cfg.h`: channel별 복구 지연, 최대 재시도, 알림 callback 설정
+- `tests/nm/test_busoff_recovery.c`: BusOff 진입/복구/반복 실패 테스트
+
+HS-CAN 결과물에서는 BusOff가 발생하면 Tx를 막고, 정해진 정책에 따라 controller를 복구한 뒤 online으로 돌아와야 한다. CAN-FD 결과물에서도 BusOff 의미는 동일하므로 frame format과 무관하게 channel 상태 정책을 공유해야 한다.
+
+## 적용 고려사항과 트러블슈팅
+
+BusOff는 단순한 에러 flag가 아니라 네트워크 보호 정책이다. 계속된 오류 상황에서 무조건 즉시 재송신하면 bus를 더 불안정하게 만들 수 있으므로, offline 전환과 복구 지연을 명확히 두어야 한다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| BusOff가 발생했는데 application이 계속 Tx 요청 | CCL/Driver에 offline 상태가 전파되지 않음 | BusOff notification이 CCL Tx gate와 Driver state를 모두 갱신하는지 확인한다. |
+| 복구 후 첫 송신이 실패 | controller 재초기화 전에 Tx queue를 그대로 유지 | 복구 시 queue flush 또는 재전송 정책을 명확히 선택한다. |
+| 반복 BusOff로 CPU 부하 증가 | 즉시 복구 루프 발생 | exponential backoff 또는 최대 재시도 후 locked offline 상태를 둔다. |
+| CAN-FD에서만 BusOff가 잦음 | data phase timing 또는 transceiver FD 지원 문제 | nominal/data bitrate, sample point, transceiver 스펙을 재확인한다. |
+
+트러블슈팅은 CAN controller error counter와 BusOff flag를 함께 봐야 한다. TEC/REC 변화, last error code, bus analyzer error frame을 동시에 기록하면 물리 계층 문제와 소프트웨어 상태 문제를 구분할 수 있다.
+
 ## 완료 기준
 
 - CAN Driver의 BusOff callback과 NM이 연결된다.

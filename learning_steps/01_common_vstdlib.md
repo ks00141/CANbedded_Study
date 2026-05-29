@@ -161,6 +161,30 @@ void VStdGlobalIntRestore(tVStdIrqStateType old_status)
 3. `V_MEMROM1 const vuint8 V_MEMROM2 table[4]` 형태의 선언이 PC 환경에서 컴파일되도록 매크로를 정의하라.
 4. `VStdRamMemCpy()`에 `NULL` 포인터가 들어오면 어떻게 처리할지 정책을 정하고 구현하라.
 
+## 단계 산출물
+
+이 단계를 끝내면 이후 모든 계층이 공통으로 사용하는 최소 기반 라이브러리가 생성되어야 한다.
+
+- `middleware/common/platform_types.h`: `vuint8`, `vuint16`, `vuint32`, `vboolean` 등 고정 폭 타입 정의
+- `middleware/common/compiler.h`: `V_MEMROM`, `V_MEMRAM`, `V_MEMROM0`, `V_MEMROM1` 등 메모리/컴파일러 추상화 매크로
+- `middleware/common/vstdlib.h`, `middleware/common/vstdlib.c`: 메모리 초기화, 복사, 비교, 간단한 보호 구간 진입/해제 wrapper
+- `tests/common/test_vstdlib.c`: PC 환경에서 공통 타입 크기와 메모리 함수 동작을 검증하는 테스트
+
+HS-CAN 미들웨어와 CAN-FD 미들웨어는 같은 공통 계층을 공유해야 한다. CAN-FD에서는 payload가 64바이트까지 커지므로, 이 단계의 메모리 복사/초기화 함수가 8바이트 전용 가정 없이 임의 길이를 처리하는지 반드시 검증한다.
+
+## 적용 고려사항과 트러블슈팅
+
+SPC58xC는 Power Architecture 계열 MCU이며 컴파일러, 링커 스크립트, 메모리 섹션 정책의 영향을 크게 받는다. 공통 헤더를 작성할 때는 PC 테스트용 정의와 실제 MCU 빌드용 정의를 분리하고, 같은 API 이름을 유지해야 이후 계층을 쉽게 이식할 수 있다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| PC 테스트에서는 통과하지만 MCU 빌드에서 타입 크기가 다름 | 컴파일러 기본 타입 폭을 암묵적으로 사용 | `stdint.h` 기반으로 타입을 고정하고 `sizeof` 정적 검사를 추가한다. |
+| `V_MEMROM`이 붙은 테이블이 RAM에 배치됨 | 링커 섹션 매핑 누락 | `compiler.h` 매크로와 링커 스크립트의 section 이름을 함께 검토한다. |
+| 인터럽트와 main loop가 공유하는 flag가 갱신되지 않음 | `volatile` 누락 또는 최적화 영향 | ISR 공유 변수에는 volatile qualifier를 사용하고 접근 단위를 8/16/32비트로 제한한다. |
+| CAN-FD 64바이트 payload 복사 중 buffer overflow 발생 | 기존 HS-CAN 8바이트 크기를 그대로 사용 | 공통 함수는 length 인자를 신뢰하지 말고 호출 계층에서 destination capacity를 함께 검증한다. |
+
+트러블슈팅 순서는 `타입 크기 확인 -> 메모리 섹션 map 파일 확인 -> volatile 대상 확인 -> PC 단위 테스트 재실행 -> MCU 최소 예제 빌드` 순서가 좋다.
+
 ## 완료 기준
 
 - 공통 타입 헤더만 include해도 상위 모듈에서 `vuint8`, `vuint16`, `TxDataPtr`를 사용할 수 있다.

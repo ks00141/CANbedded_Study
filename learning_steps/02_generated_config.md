@@ -153,6 +153,31 @@ void Can_Init(void)
 3. `MW_CAN_USE_EXTENDED_ID`가 0이면 29비트 ID 송신을 거부하는 코드를 작성하라.
 4. 설정 파일을 `project_a`와 `project_b`로 나누고, 같은 구현 코드가 다른 설정으로 컴파일되게 구성하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 “코드를 바꾸지 않고 설정만 바꿔 미들웨어 구성이 달라지는 구조”이다.
+
+- `middleware/config/v_cfg.h`: 미들웨어 기능 on/off, 주기, 빌드 variant 정의
+- `middleware/config/can_cfg.h`: 채널 수, Tx/Rx object 수, ID 타입, queue 사용 여부, Classical CAN/CAN-FD 사용 여부
+- `middleware/config/can_par.h`, `middleware/config/can_par.c`: Tx/Rx message object, filter, baudrate, callback table
+- `tools/config_schema.md`: 사람이 설정 파일을 작성할 때 지켜야 할 필드 규칙
+- `tests/config/test_config_size.c`: 설정값과 테이블 크기가 일치하는지 검증하는 테스트
+
+HS-CAN 결과물은 `MW_CAN_USE_FD == 0`인 설정 variant로 생성하고, CAN-FD 결과물은 `MW_CAN_USE_FD == 1` 및 메시지별 FD/BRS/length 정책을 포함한 variant로 생성한다. 두 variant는 같은 구현 코드를 공유하고 설정 파일만 다르게 가져가는 구성이 목표다.
+
+## 적용 고려사항과 트러블슈팅
+
+설정 계층은 이후 모든 계층의 compile-time contract 역할을 한다. SPC58xC 보드에서는 CAN clock source, MCAN/FlexCAN instance, pin mux, transceiver enable pin 같은 하드웨어 조건도 설정의 일부로 다루어야 한다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| Tx object 수를 바꿨더니 런타임에서 배열 범위를 벗어남 | 매크로와 설정 테이블 길이 불일치 | `MW_NUM_CAN_TX_OBJECTS`와 `CanTxConfig[]` 길이를 compile-time assert로 묶는다. |
+| HS-CAN 빌드에 CAN-FD 필드가 섞여 빌드 오류 발생 | variant 분리 기준이 불명확 | Classical 공용 필드와 FD 전용 필드를 구조체/매크로로 명확히 분리한다. |
+| 보드에서 통신 속도가 맞지 않음 | SPC58xC CAN clock, prescaler, sample point 계산 오류 | clock tree와 CAN nominal/data bit timing 계산표를 설정 문서에 함께 남긴다. |
+| 프로젝트 A 설정이 프로젝트 B 빌드에 섞임 | include path 우선순위 오류 | variant별 config 디렉터리를 만들고 빌드 로그에서 include 경로 순서를 확인한다. |
+
+트러블슈팅은 먼저 “현재 빌드가 어떤 variant 설정을 include했는지” 확인하는 것부터 시작한다. 설정 헤더에 `MW_CONFIG_VARIANT_NAME` 문자열 또는 매크로를 두면 로그와 map 파일에서 추적하기 쉽다.
+
 ## 완료 기준
 
 - 숫자 상수를 구현 파일에 직접 쓰지 않는다.

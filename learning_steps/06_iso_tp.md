@@ -218,6 +218,32 @@ static void IsoTp_HandleFirstFrame(const vuint8 frame[8])
 4. STmin을 적용하여 Consecutive Frame 사이에 최소 지연 tick을 두라.
 5. 수신 timeout counter를 추가하고 일정 tick 동안 CF가 오지 않으면 reset하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 UDS와 같은 진단 payload를 CAN frame 위에서 분할/재조립하는 ISO-TP 계층이다.
+
+- `middleware/tp/isotp.h`: 전송 요청, 수신 indication, periodic main function API
+- `middleware/tp/isotp.c`: Single/First/Consecutive/FlowControl frame 처리 상태기계
+- `middleware/tp/isotp_cfg.h`: addressing 방식, timeout, block size, STmin, buffer 크기 설정
+- `middleware/tp/isotp_par.c`: Tx/Rx connection별 CAN handle과 addressing 정보
+- `tests/tp/test_isotp_classical.c`: HS-CAN 8바이트 frame 기반 분할/재조립 테스트
+- `tests/tp/test_isotp_canfd.c`: CAN-FD payload 크기별 Single/Consecutive frame 테스트
+
+HS-CAN 산출물에서는 7바이트 또는 addressing byte를 제외한 더 작은 payload 단위로 안정적으로 분할되어야 한다. CAN-FD 산출물에서는 64바이트 frame을 활용해 Single Frame 가능 길이와 Consecutive Frame payload가 커지는 효과를 반영해야 한다.
+
+## 적용 고려사항과 트러블슈팅
+
+ISO-TP는 타이밍과 상태 전이가 핵심이다. Driver와 IL이 정상이어도 Flow Control 처리, sequence number, N_As/N_Bs/N_Cr timeout 중 하나가 틀리면 진단 통신이 중간에 멈춘다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| 긴 응답이 첫 frame 이후 멈춤 | Flow Control frame 미수신 또는 block size 처리 오류 | FC 송수신 CAN ID와 addressing byte를 analyzer에서 확인한다. |
+| 수신 재조립 데이터가 한 frame씩 밀림 | Consecutive Frame sequence number 검증 오류 | SN 1~15 rollover 테스트를 추가한다. |
+| buffer overflow 발생 | UDS 최대 응답 크기보다 TP buffer가 작음 | connection별 Rx/Tx buffer 크기와 UDS 응답 최대 길이를 함께 산정한다. |
+| CAN-FD 전환 후 Single Frame 판단이 틀림 | Classical CAN payload 기준을 계속 사용 | frame format별 `max_sf_payload`, `max_cf_payload` 계산 함수를 분리한다. |
+
+트러블슈팅은 PCI byte를 먼저 해석하는 것이 빠르다. 로그에 frame type, payload length, SN, BS, STmin, 남은 길이를 남기면 timeout 문제와 length 문제를 구분하기 쉽다.
+
 ## 완료 기준
 
 - 7바이트 이하 메시지를 Single Frame으로 송수신할 수 있다.

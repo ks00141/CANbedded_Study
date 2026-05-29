@@ -30,6 +30,13 @@ MCU / CAN Hardware
 
 처음부터 전체 기능을 동일하게 구현하려고 하기보다, 타입과 설정 모델을 먼저 만들고 CAN 송수신, IL, ISO-TP, UDS, NM/CCL 순서로 기능을 확장하는 방식을 추천한다. 마지막 단계에서는 기존 HS-CAN, 즉 Classical CAN 8바이트 payload 기반 구조를 CAN-FD 64바이트 payload와 FD bit-rate switching 구조로 확장한다.
 
+이 로드맵을 끝까지 수행했을 때의 최종 결과물은 다음 두 가지 동작 가능한 미들웨어이다.
+
+1. `SPC58xC` 시리즈 MCU에서 HS-CAN/Classical CAN 통신이 가능한 미들웨어
+2. `SPC58xC` 시리즈 MCU에서 CAN-FD 통신이 가능한 미들웨어
+
+각 학습 단계는 단순 지식 습득으로 끝나지 않고, 다음 단계가 참조할 수 있는 코드/설정/테스트 산출물을 남기는 것을 원칙으로 한다. 1~9단계 산출물을 통합하면 HS-CAN 미들웨어가 되고, 10단계 산출물을 추가 적용하면 CAN-FD 미들웨어가 된다.
+
 ## 2. 전체 학습 순서 요약
 
 | 순서 | 학습 계층 | 핵심 목표 | 우선 참조 파일 |
@@ -44,6 +51,41 @@ MCU / CAN Hardware
 | 8 | NM | BusOff 복구와 네트워크 상태 관리 이해 | `Nm/nm_basic.*`, `Gen/nmb_cfg.h` |
 | 9 | CCL | 통신 요청/해제, 진단 통신 제어 통합 이해 | `Ccl/*`, `Gen/ccl_cfg.h` |
 | 10 | CAN-FD Migration | HS-CAN 구조를 CAN-FD 데이터 길이, DLC, BRS, ISO-TP over CAN-FD로 확장 | 기존 전체 계층, 신규 FD 설정 |
+
+## 2.0. 단계별 산출물과 최종 통합 구조
+
+각 단계에서 생성해야 하는 산출물은 아래와 같다.
+
+| 단계 | 산출물 | 통합 후 역할 |
+|---|---|---|
+| 1 | `middleware/common`, 공통 타입/메모리/인터럽트 유틸 | 모든 계층의 기반 타입과 보호 구간 |
+| 2 | `middleware/config`, 프로젝트 설정 헤더 | HS-CAN/CAN-FD 빌드 옵션과 정적 크기 결정 |
+| 3 | `middleware/can/can_par.*`, 메시지/신호 버퍼 | CAN Driver와 IL이 공유하는 메시지 데이터 모델 |
+| 4 | `middleware/can/can.*`, SPC58xC CAN HAL adapter | HS-CAN 송수신, Rx dispatch, Tx confirmation |
+| 5 | `middleware/il`, signal accessor와 주기 송신 | 애플리케이션 신호와 CAN 메시지 연결 |
+| 6 | `middleware/isotp`, ISO-TP 송수신 상태 머신 | UDS payload와 CAN frame 사이의 분할/재조립 |
+| 7 | `middleware/uds`, UDS dispatcher와 service callback | 진단 서비스 처리 |
+| 8 | `middleware/nm`, BusOff 복구 상태 머신 | CAN 오류 복구와 네트워크 상태 관리 |
+| 9 | `middleware/ccl`, 통신 요청/제어 정책 | 앱/진단/NM 요청 통합, Tx/Rx enable 제어 |
+| 10 | `middleware/canfd`, FD frame/DLC/ISO-TP 확장 | CAN-FD 64바이트 payload와 BRS 지원 |
+
+최종 HS-CAN 미들웨어는 1~9단계 산출물을 통합한 결과이다.
+
+```text
+app -> uds -> isotp(classic) -> can(classic) -> SPC58xC CAN controller
+app -> il  -> can(classic)  -> SPC58xC CAN controller
+nm/ccl -> can/il/isotp/uds 상태 제어
+```
+
+최종 CAN-FD 미들웨어는 HS-CAN 미들웨어에 10단계 산출물을 추가하고, frame model과 TP capacity를 FD-aware 구조로 확장한 결과이다.
+
+```text
+app -> uds -> isotp(classic/fd) -> can(classic/fd) -> SPC58xC CAN-FD controller
+app -> il  -> can(classic/fd)   -> SPC58xC CAN-FD controller
+nm/ccl -> classic/fd 송수신 상태 공통 제어
+```
+
+통합 시에는 각 단계별 unit test와 단계 간 integration test를 남긴다. 예를 들어 4단계 CAN Driver는 mock HAL test를 통과해야 하고, 6단계 ISO-TP는 CAN mock 위에서 UDS payload 재조립 test를 통과해야 한다.
 
 ## 2.1. 타깃 MCU: SPC58xC 적용 관점
 
@@ -667,6 +709,8 @@ tests/
 - CAN Tx/Rx 핸들 정의
 - CAN 메시지 설정 테이블 정의
 - mock CAN 송신 로그 출력
+- 산출물: `middleware/common`, `middleware/config`, `middleware/can/can_par.*`
+- 검증: PC 빌드, 기본 타입 크기 assert, CAN 설정 테이블 범위 검사
 
 ### Milestone 2: CAN Driver MVP
 
@@ -675,6 +719,8 @@ tests/
 - `Can_RxIndication`
 - Tx confirmation callback
 - Rx dispatch callback
+- 산출물: HS-CAN mock driver와 SPC58xC HAL adapter 인터페이스
+- 검증: Tx handle 송신, Rx ID 매칭, BusOff callback unit test
 
 ### Milestone 3: IL MVP
 
@@ -682,6 +728,8 @@ tests/
 - Rx 신호 get 함수
 - 10ms task 기반 주기 송신
 - CAN Rx에서 IL buffer 갱신
+- 산출물: signal accessor, 주기 송신 scheduler, Rx indication 처리
+- 검증: 신호 packing/unpacking, 200ms 주기 송신, Rx buffer update test
 
 ### Milestone 4: ISO-TP MVP
 
@@ -689,6 +737,8 @@ tests/
 - Multi-frame 수신 재조립
 - Multi-frame 송신 분할
 - Flow Control 처리
+- 산출물: ISO-TP classic 상태 머신
+- 검증: SF/FF/CF/FC test vector, timeout/error path test
 
 ### Milestone 5: UDS MVP
 
@@ -696,6 +746,8 @@ tests/
 - Service dispatcher
 - Negative response
 - `0x10`, `0x3E`, `0x22` 구현
+- 산출물: UDS core, service table, app callback skeleton
+- 검증: positive/negative response, session condition, DID response test
 
 ### Milestone 6: Security / Routine / Communication Control
 
@@ -703,12 +755,16 @@ tests/
 - `0x28 CommunicationControl`
 - `0x31 RoutineControl`
 - session/security 조건 검사
+- 산출물: security state, routine callback, CommunicationControl to CCL adapter
+- 검증: seed/key sequence, invalid key NRC, Tx/Rx disable test
 
 ### Milestone 7: NM / CCL 통합
 
 - BusOff 상태 머신
 - 통신 요청/해제 상태
 - UDS CommunicationControl과 CCL 연동
+- 산출물: HS-CAN 통합 미들웨어 baseline
+- 검증: BusOff recovery, app/diag request arbitration, sleep/offline transition test
 
 ### Milestone 8: 실제 CAN HAL 연결
 
@@ -716,6 +772,8 @@ tests/
 - ISR callback 연결
 - BusOff interrupt 연결
 - 타이머 tick 연결
+- 산출물: SPC58xC HS-CAN bring-up package
+- 검증: loopback, CAN analyzer 송수신, bitrate/termination/error counter 확인
 
 ### Milestone 9: CAN-FD 마이그레이션
 
@@ -725,6 +783,42 @@ tests/
 - CAN HAL의 FD frame 송수신 API 연결
 - ISO-TP over CAN-FD Single Frame / Multi-frame 처리
 - 기존 Classical CAN 회귀 테스트 수행
+- 산출물: SPC58xC CAN-FD 미들웨어 variant
+- 검증: 12/16/20/24/32/48/64바이트 FD frame 송수신, BRS on/off, ISO-TP over FD, HS-CAN 회귀 test
+
+## 14.1. 통합 시 공통 고려사항과 트러블슈팅
+
+### 적용 시 고려사항
+
+- 빌드 variant를 분리한다: `MW_VARIANT_HSCAN`, `MW_VARIANT_CANFD`.
+- Driver API는 하나로 유지하되 frame 속성으로 Classical/FD를 구분한다.
+- UDS와 CCL은 frame format에 직접 의존하지 않게 한다.
+- SPC58xC HAL adapter는 mock HAL과 같은 상위 API를 제공해야 한다.
+- 모든 단계 산출물은 독립 unit test와 통합 test를 가져야 한다.
+
+### 발생 가능한 문제 케이스
+
+| 문제 | 대표 원인 | 확인 방법 | 조치 |
+|---|---|---|---|
+| CAN 송신 안 됨 | controller clock/bit timing/mailbox init 오류 | CAN analyzer, error counter, Tx request bit 확인 | clock tree와 bit timing 재계산, mailbox mode 확인 |
+| Rx callback 미호출 | filter/mask/ID mapping 오류 | raw Rx interrupt와 software handle table 비교 | acceptance filter와 Rx ID table 수정 |
+| 신호 값 깨짐 | endian/bit offset/atomic read 문제 | payload dump와 accessor 결과 비교 | shift/mask packing 재검토, buffer lock 적용 |
+| ISO-TP 중간 중단 | SN 오류, FC timeout, buffer 부족 | TP state/expected SN/timer 로그 확인 | timeout 조정, buffer size 확장, FC 처리 수정 |
+| UDS NRC 오동작 | session/security 조건표 오류 | service table과 현재 state dump | condition table 수정, callback return code 통일 |
+| BusOff 반복 | bitrate mismatch, wiring, transceiver, FD data phase timing 오류 | CAN analyzer, error counter, scope 확인 | bitrate/termination/BRS/data timing 재검토 |
+| CAN-FD 길이 오류 | DLC와 length 혼동 | DLC/length log, 12/64 byte test | DLC 변환 함수 사용 강제 |
+
+### 트러블슈팅 순서
+
+1. 물리 계층 확인: 전원, transceiver, termination, CANH/CANL, analyzer 연결.
+2. MCU 초기화 확인: clock, pin mux, CAN controller instance, interrupt enable.
+3. Driver 단독 확인: loopback 또는 analyzer로 raw frame 송수신.
+4. 설정 테이블 확인: Tx/Rx handle, ID, DLC/length, callback pointer.
+5. IL 확인: payload dump와 signal accessor 결과 비교.
+6. ISO-TP 확인: SF부터 검증하고 FF/CF/FC 순서로 확장.
+7. UDS 확인: `0x3E`, `0x10`, `0x22`처럼 단순 서비스부터 검증.
+8. NM/CCL 확인: online/offline, Tx/Rx enable, BusOff recovery 상태 로그 확인.
+9. CAN-FD 확인: Classical 회귀 test 후 FD DLC/BRS/payload size를 단계적으로 증가.
 
 ## 15. 학습 시 주의할 점
 

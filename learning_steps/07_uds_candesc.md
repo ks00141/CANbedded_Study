@@ -241,6 +241,31 @@ void Uds_OnRequest(const vuint8 *data, vuint16 length)
 4. suppress positive response bit가 설정된 `3E 80` 요청에 대해 positive response를 보내지 않도록 구현하라.
 5. service table 구조체를 만들고 switch문 대신 테이블 lookup 방식으로 dispatcher를 구현하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 ISO-TP 위에서 동작하는 최소 UDS 진단 계층과 application description table이다.
+
+- `middleware/diag/uds.h`: service dispatch, request indication, response API
+- `middleware/diag/uds.c`: SID별 handler 호출, positive/negative response 생성, session/security 상태 관리
+- `middleware/diag/candesc.h`, `middleware/diag/candesc.c`: DID, RID, IO control, routine callback table
+- `middleware/diag/uds_cfg.h`: 지원 service, session timeout, response buffer 크기 설정
+- `tests/diag/test_uds_services.c`: `0x10`, `0x22`, `0x2E`, `0x31` 등 기본 service 테스트
+
+HS-CAN 결과물에서는 큰 응답이 ISO-TP segmentation을 통해 정상 전달되어야 한다. CAN-FD 결과물에서는 UDS handler 자체는 frame format을 몰라도 되고, TP 계층이 제공하는 payload stream만 처리하도록 유지해야 한다.
+
+## 적용 고려사항과 트러블슈팅
+
+UDS 계층은 실제 ECU 기능과 직접 연결되므로 요청 검증, session 조건, security 조건, 응답 길이 제한이 명확해야 한다. CAN-FD로 바뀌어도 UDS service의 의미가 바뀌는 것은 아니며, 달라지는 것은 주로 TP 효율과 buffer 정책이다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| 지원 service인데 `0x11 serviceNotSupported`가 반환됨 | service table 등록 누락 | SID dispatch table과 compile-time feature switch를 함께 확인한다. |
+| DID 응답 길이가 틀림 | DID length table과 실제 callback 반환 길이 불일치 | DID별 fixed/variable length 정책을 문서화하고 테스트한다. |
+| session 전환 후 바로 timeout됨 | S3 timer 갱신 위치 오류 | request 수신, positive response 송신, tester present 처리 시점을 확인한다. |
+| CAN-FD 전환 후 `responseTooLong` 기준이 애매함 | UDS buffer와 TP frame payload 기준 혼동 | UDS는 전체 response buffer 기준으로 판단하고 frame 분할은 TP에 맡긴다. |
+
+트러블슈팅 시에는 UDS negative response code를 단순 에러로 보지 말고 설계 의도와 비교해야 한다. `SID, sub-function, session, security level, request length, selected NRC`를 한 줄 로그로 남기면 원인 추적이 빨라진다.
+
 ## 완료 기준
 
 - ISO-TP callback에서 UDS request를 받을 수 있다.

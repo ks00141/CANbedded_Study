@@ -194,6 +194,31 @@ void Il_CanRxIndication(CanRxHandle rx)
 4. Rx indication flag를 추가하고, 애플리케이션이 읽으면 flag가 clear되도록 구현하라.
 5. `Il_TxStop()` 상태에서는 주기 송신이 발생하지 않음을 테스트하라.
 
+## 단계 산출물
+
+이 단계의 결과물은 CAN message를 application signal 단위로 바꾸는 Interaction Layer이다.
+
+- `middleware/il/il.h`: signal read/write, Tx request, Rx indication API
+- `middleware/il/il.c`: Tx 주기 처리, Rx buffer 갱신, timeout 감시
+- `middleware/il/il_par.h`, `middleware/il/il_par.c`: message별 signal layout, 주기, timeout, 초기값 설정
+- `tests/il/test_il_signal.c`: endian/offset/length signal packing 테스트
+- `tests/il/test_il_periodic.c`: 주기 송신과 timeout 검증 테스트
+
+HS-CAN 결과물에서는 8바이트 message 안에서 signal packing/unpacking이 정확해야 한다. CAN-FD 결과물에서는 64바이트 payload 내부 signal도 같은 API로 접근하되, 기존 8바이트 메시지의 동작은 변하지 않아야 한다.
+
+## 적용 고려사항과 트러블슈팅
+
+IL은 application과 bus 사이의 데이터 계약이다. 이 계층에서 signal 위치, endian, scaling, timeout 정책이 틀리면 Driver가 정상이어도 application은 잘못된 값을 보게 된다.
+
+| 문제 케이스 | 원인 | 확인/대응 |
+|---|---|---|
+| 수신 signal 값이 2배 또는 256배 차이남 | endian 또는 bit offset 해석 오류 | DBC의 byte order와 start bit 규칙을 기준으로 packing 테스트를 만든다. |
+| 주기 송신이 빨라지거나 늦어짐 | scheduler tick과 message period 단위 혼동 | `MW_TASK_PERIOD_MS` 기준으로 tick count를 계산하고 remainder 정책을 문서화한다. |
+| Rx buffer 값이 가끔 깨짐 | ISR와 main loop 동시 접근 | double buffer 또는 짧은 critical section으로 buffer copy를 보호한다. |
+| CAN-FD 확장 후 일부 signal이 잘림 | message buffer를 8바이트로 고정 | message별 configured length를 사용하고 signal end bit가 length 안에 있는지 검사한다. |
+
+트러블슈팅할 때는 한 개 message를 골라 “원본 payload hex -> unpacked signal -> application 값”을 기록한다. Tx 방향은 반대로 “application 값 -> packed payload hex -> analyzer frame”을 비교한다.
+
 ## 완료 기준
 
 - 신호 put 함수가 Tx buffer를 정확히 갱신한다.
